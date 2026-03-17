@@ -5,347 +5,445 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ASCEND — Life RPG</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!-- Sage: fully local rule-based AI, no downloads -->
 <style>
-  :root {
-    --bg:#0a0a0c; --bg2:#111116; --bg3:#18181f; --border:#2a2a35;
-    --gold:#c9922a; --gold2:#f0b84a; --gold-glow:rgba(201,146,42,0.15);
-    --red:#c0392b; --green:#2ecc71; --blue:#3498db; --purple:#9b59b6;
-    --text:#e8e0cc; --text-dim:#7a7060; --text-mid:#b0a890;
-    --tier-easy:#27ae60; --tier-medium:#f39c12; --tier-hard:#e74c3c; --tier-legendary:#9b59b6;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;display:flex;justify-content:center;}
-  #app{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;}
-  .screen{display:none;padding:0 0 90px 0;min-height:100vh;}
-  .screen.active{display:block;}
+:root{
+  --bg:#0a0a0c;--bg2:#111116;--bg3:#18181f;--border:#2a2a35;
+  --gold:#c9922a;--gold2:#f0b84a;--gold-glow:rgba(201,146,42,0.15);
+  --red:#c0392b;--green:#2ecc71;--blue:#3498db;--purple:#9b59b6;
+  --text:#e8e0cc;--text-dim:#7a7060;--text-mid:#b0a890;
+  --freq-daily:#3498db;--freq-weekly:#9b59b6;--freq-longterm:#c9922a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;display:flex;justify-content:center;}
+#app{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;}
+.screen{display:none;padding:0 0 90px 0;min-height:100vh;}
+.screen.active{display:block;}
 
-  .topbar{padding:18px 20px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10;}
-  .topbar-title{font-family:'Cinzel',serif;font-size:14px;font-weight:900;letter-spacing:4px;color:var(--gold2);text-transform:uppercase;}
-  .topbar-sub{font-size:10px;color:var(--text-dim);letter-spacing:2px;}
-  .day-badge{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:10px;color:var(--text-mid);letter-spacing:1px;}
+/* TOPBAR */
+.topbar{padding:16px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10;}
+.topbar-title{font-family:'Cinzel',serif;font-size:14px;font-weight:900;letter-spacing:4px;color:var(--gold2);text-transform:uppercase;}
+.topbar-sub{font-size:10px;color:var(--text-dim);letter-spacing:2px;}
+.day-badge{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:10px;color:var(--text-mid);letter-spacing:1px;}
 
-  .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:flex;background:var(--bg2);border-top:1px solid var(--border);z-index:100;}
-  .nav-btn{flex:1;padding:10px 0 14px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;transition:color 0.2s;}
-  .nav-btn.active{color:var(--gold2);}
-  .nav-btn svg{width:20px;height:20px;}
+/* NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;display:flex;background:var(--bg2);border-top:1px solid var(--border);z-index:100;}
+.nav-btn{flex:1;padding:9px 0 13px;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;color:var(--text-dim);font-family:'Space Mono',monospace;font-size:7px;letter-spacing:1px;text-transform:uppercase;transition:color 0.2s;}
+.nav-btn.active{color:var(--gold2);}
+.nav-btn svg{width:18px;height:18px;}
 
-  /* HOME */
-  .hero-card{margin:20px 16px 0;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:24px 20px;position:relative;overflow:hidden;}
-  .hero-card::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,var(--gold-glow) 0%,transparent 70%);pointer-events:none;}
-  .hero-rank{font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
-  .hero-name{font-family:'Cinzel',serif;font-size:26px;font-weight:900;color:var(--text);line-height:1;margin-bottom:4px;}
-  .hero-class{font-size:11px;color:var(--text-dim);letter-spacing:2px;margin-bottom:20px;}
-  .level-row{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;}
-  .level-num{font-family:'Cinzel',serif;font-size:42px;font-weight:900;color:var(--gold2);line-height:1;}
-  .level-label{font-size:11px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;}
-  .xp-info{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:8px;}
-  .xp-bar-outer{background:var(--bg);border-radius:3px;height:8px;overflow:hidden;border:1px solid var(--border);}
-  .xp-bar-inner{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width 1s cubic-bezier(0.4,0,0.2,1);position:relative;}
-  .xp-bar-inner::after{content:'';position:absolute;right:0;top:0;width:4px;height:100%;background:white;opacity:0.6;border-radius:3px;}
-  .days-to-level{font-size:10px;color:var(--text-dim);margin-top:10px;letter-spacing:1px;}
-  .days-to-level span{color:var(--gold);}
-  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 16px 0;}
-  .stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 14px 12px;}
-  .stat-icon{font-size:18px;margin-bottom:6px;}
-  .stat-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
-  .stat-value{font-family:'Cinzel',serif;font-size:20px;font-weight:600;color:var(--text);}
-  .stat-value.gold{color:var(--gold2);} .stat-value.green{color:var(--green);}
-  .daily-cap-bar{margin:14px 16px 0;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;}
-  .cap-header{display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;}
-  .cap-label{font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
-  .cap-num{font-size:12px;color:var(--text-mid);}
-  .cap-bar-outer{background:var(--bg);border-radius:3px;height:6px;overflow:hidden;}
-  .cap-bar-inner{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:3px;transition:width 0.6s ease;}
-  .cap-note{font-size:9px;color:var(--text-dim);margin-top:6px;letter-spacing:1px;}
+/* HOME */
+.hero-card{margin:18px 14px 0;background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:22px 18px;position:relative;overflow:hidden;}
+.hero-card::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,var(--gold-glow) 0%,transparent 70%);pointer-events:none;}
+.hero-rank{font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:5px;}
+.hero-name{font-family:'Cinzel',serif;font-size:24px;font-weight:900;color:var(--text);line-height:1;margin-bottom:3px;}
+.hero-class{font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:18px;}
+.level-row{display:flex;align-items:baseline;gap:10px;margin-bottom:8px;}
+.level-num{font-family:'Cinzel',serif;font-size:40px;font-weight:900;color:var(--gold2);line-height:1;}
+.level-label{font-size:11px;color:var(--text-dim);letter-spacing:3px;text-transform:uppercase;}
+.xp-info{display:flex;justify-content:space-between;font-size:10px;color:var(--text-dim);margin-bottom:7px;}
+.xp-bar-outer{background:var(--bg);border-radius:3px;height:7px;overflow:hidden;border:1px solid var(--border);}
+.xp-bar-inner{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width 1s cubic-bezier(0.4,0,0.2,1);position:relative;}
+.xp-bar-inner::after{content:'';position:absolute;right:0;top:0;width:4px;height:100%;background:white;opacity:0.5;border-radius:3px;}
+.days-to-level{font-size:10px;color:var(--text-dim);margin-top:9px;letter-spacing:1px;}
+.days-to-level span{color:var(--gold);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:12px 14px 0;}
+.stat-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px;}
+.stat-icon{font-size:17px;margin-bottom:5px;}
+.stat-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.stat-value{font-family:'Cinzel',serif;font-size:19px;font-weight:600;color:var(--text);}
+.stat-value.gold{color:var(--gold2);} .stat-value.green{color:var(--green);}
+.daily-cap-bar{margin:12px 14px 0;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px 15px;}
+.cap-header{display:flex;justify-content:space-between;margin-bottom:7px;align-items:center;}
+.cap-label{font-size:10px;letter-spacing:2px;color:var(--text-dim);text-transform:uppercase;}
+.cap-num{font-size:11px;color:var(--text-mid);}
+.cap-bar-outer{background:var(--bg);border-radius:3px;height:5px;overflow:hidden;}
+.cap-bar-inner{height:100%;background:linear-gradient(90deg,var(--blue),var(--purple));border-radius:3px;transition:width 0.6s ease;}
+.cap-note{font-size:9px;color:var(--text-dim);margin-top:5px;letter-spacing:1px;}
 
-  /* QUESTS */
-  .quest-header{padding:16px 16px 10px;display:flex;justify-content:space-between;align-items:center;}
-  .quest-header-title{font-family:'Cinzel',serif;font-size:13px;font-weight:600;letter-spacing:3px;color:var(--text);}
-  .quest-completed-count{font-size:10px;color:var(--text-dim);}
-  .category-section{margin-bottom:6px;}
-  .category-header{padding:8px 16px 6px;display:flex;align-items:center;gap:8px;}
-  .cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-  .cat-name-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text-mid);}
-  .cat-xp-sum{margin-left:auto;font-size:10px;color:var(--text-dim);}
-  .quest-list{padding:0 12px;}
-  .quest-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color 0.2s;position:relative;overflow:hidden;}
-  .quest-item:active{transform:scale(0.98);}
-  .quest-item.done{border-color:transparent;background:rgba(46,204,113,0.05);}
-  .quest-item.done::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:3px 0 0 3px;}
-  .quest-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-  .quest-item.done .quest-check{background:var(--green);border-color:var(--green);}
-  .quest-check svg{width:12px;height:12px;display:none;}
-  .quest-item.done .quest-check svg{display:block;}
-  .quest-info{flex:1;}
-  .quest-name{font-size:13px;color:var(--text);line-height:1.3;margin-bottom:3px;}
-  .quest-item.done .quest-name{color:var(--text-dim);text-decoration:line-through;text-decoration-color:var(--text-dim);}
-  .quest-meta{display:flex;align-items:center;gap:8px;}
-  .quest-desc{font-size:10px;color:var(--text-dim);}
-  .quest-xp{font-family:'Cinzel',serif;font-size:13px;font-weight:600;flex-shrink:0;}
-  .quest-item.done .quest-xp{color:var(--text-dim)!important;}
+/* FREQUENCY BADGES */
+.freq-badge{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:2px 6px;border-radius:3px;font-weight:700;flex-shrink:0;}
+.freq-daily{background:rgba(52,152,219,0.15);color:var(--freq-daily);border:1px solid rgba(52,152,219,0.3);}
+.freq-weekly{background:rgba(155,89,182,0.15);color:var(--freq-weekly);border:1px solid rgba(155,89,182,0.3);}
+.freq-longterm{background:rgba(201,146,42,0.15);color:var(--freq-longterm);border:1px solid rgba(201,146,42,0.3);}
 
-  /* TIER BADGES on quest cards */
-  .tier-pip{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;flex-shrink:0;}
+/* QUEST FILTER TABS */
+.quest-filters{display:flex;gap:6px;padding:10px 14px 4px;overflow-x:auto;}
+.quest-filters::-webkit-scrollbar{display:none;}
+.filter-btn{background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;padding:5px 10px;cursor:pointer;white-space:nowrap;transition:all 0.2s;text-transform:uppercase;}
+.filter-btn.active{background:var(--bg2);border-color:var(--gold);color:var(--gold2);}
 
-  /* STATS */
-  .stats-section{padding:16px 16px 0;}
-  .section-title{font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-  .week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px;}
-  .week-day{display:flex;flex-direction:column;align-items:center;gap:4px;}
-  .week-day-label{font-size:8px;color:var(--text-dim);}
-  .week-day-bar-wrap{width:100%;height:60px;background:var(--bg3);border-radius:4px;display:flex;align-items:flex-end;overflow:hidden;border:1px solid var(--border);}
-  .week-day-bar{width:100%;background:linear-gradient(180deg,var(--gold2),var(--gold));border-radius:3px;transition:height 0.8s cubic-bezier(0.4,0,0.2,1);}
-  .week-day-bar.today{background:linear-gradient(180deg,#fff,var(--gold2));}
-  .week-day-xp{font-size:8px;color:var(--text-dim);}
-  .history-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:12px;}
-  .history-row:last-child{border-bottom:none;}
-  .history-date{font-size:10px;color:var(--text-dim);width:60px;flex-shrink:0;}
-  .history-bar-wrap{flex:1;background:var(--bg3);border-radius:3px;height:6px;overflow:hidden;}
-  .history-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;}
-  .history-xp{font-size:10px;color:var(--gold);width:50px;text-align:right;flex-shrink:0;}
-  .lv-event{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
-  .lv-badge{font-family:'Cinzel',serif;font-size:11px;font-weight:900;color:var(--gold2);background:var(--bg3);border:1px solid var(--gold);border-radius:6px;padding:4px 8px;flex-shrink:0;}
-  .lv-info{flex:1;} .lv-title{font-size:12px;color:var(--text);} .lv-date{font-size:10px;color:var(--text-dim);}
-  .lv-days{font-size:10px;color:var(--gold);margin-left:auto;}
+/* QUESTS */
+.quest-header{padding:14px 14px 8px;display:flex;justify-content:space-between;align-items:center;}
+.quest-header-title{font-family:'Cinzel',serif;font-size:13px;font-weight:600;letter-spacing:3px;color:var(--text);}
+.quest-completed-count{font-size:10px;color:var(--text-dim);}
+.category-section{margin-bottom:4px;}
+.category-header{padding:7px 14px 5px;display:flex;align-items:center;gap:8px;}
+.cat-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.cat-name{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text-mid);}
+.cat-xp-sum{margin-left:auto;font-size:10px;color:var(--text-dim);}
+.quest-list{padding:0 10px;}
+.quest-item{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color 0.2s;position:relative;overflow:hidden;}
+.quest-item:active{transform:scale(0.98);}
+.quest-item.done{border-color:transparent;background:rgba(46,204,113,0.05);}
+.quest-item.done::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:3px 0 0 3px;}
+.quest-item.longterm-done{border-color:transparent;background:rgba(201,146,42,0.05);}
+.quest-item.longterm-done::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);border-radius:3px 0 0 3px;}
+.quest-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.quest-item.done .quest-check,.quest-item.longterm-done .quest-check{background:var(--green);border-color:var(--green);}
+.quest-check svg{width:11px;height:11px;display:none;}
+.quest-item.done .quest-check svg,.quest-item.longterm-done .quest-check svg{display:block;}
+.quest-info{flex:1;min-width:0;}
+.quest-name{font-size:12px;color:var(--text);line-height:1.3;margin-bottom:3px;}
+.quest-item.done .quest-name,.quest-item.longterm-done .quest-name{color:var(--text-dim);text-decoration:line-through;text-decoration-color:var(--text-dim);}
+.quest-meta{display:flex;align-items:center;gap:5px;}
+.quest-desc{font-size:10px;color:var(--text-dim);}
+.quest-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.quest-xp{font-family:'Cinzel',serif;font-size:12px;font-weight:600;color:var(--gold);}
+.quest-item.done .quest-xp,.quest-item.longterm-done .quest-xp{color:var(--text-dim);}
 
-  /* ══ FORGE / CUSTOMIZE ══ */
-  .cz-section{margin:0 16px 20px;}
-  .cz-section-header{display:flex;align-items:center;justify-content:space-between;padding:14px 0 10px;border-bottom:1px solid var(--border);margin-bottom:12px;}
-  .cz-section-title{font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;}
-  .cz-add-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--gold);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 10px;cursor:pointer;}
-  .cz-add-btn:active{background:var(--bg3);}
-  .cz-input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);outline:none;transition:border-color 0.2s;width:100%;}
-  .cz-input:focus{border-color:var(--gold);}
-  .cz-input::placeholder{color:var(--text-dim);}
-  .cz-save-btn{background:var(--gold);border:none;border-radius:8px;color:var(--bg);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;padding:11px 16px;cursor:pointer;text-transform:uppercase;width:100%;margin-top:10px;}
-  .cz-save-btn:active{opacity:0.8;}
-  .cz-profile-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
-  .cz-profile-label{font-size:10px;color:var(--text-dim);letter-spacing:2px;width:80px;flex-shrink:0;text-transform:uppercase;}
+/* STATS */
+.stats-section{padding:14px 14px 0;}
+.section-title{font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:18px;}
+.week-day{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.week-day-label{font-size:8px;color:var(--text-dim);}
+.week-day-bar-wrap{width:100%;height:55px;background:var(--bg3);border-radius:4px;display:flex;align-items:flex-end;overflow:hidden;border:1px solid var(--border);}
+.week-day-bar{width:100%;background:linear-gradient(180deg,var(--gold2),var(--gold));border-radius:3px;transition:height 0.8s cubic-bezier(0.4,0,0.2,1);}
+.week-day-bar.today{background:linear-gradient(180deg,#fff,var(--gold2));}
+.week-day-xp{font-size:8px;color:var(--text-dim);}
+.history-row{display:flex;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);gap:10px;}
+.history-row:last-child{border-bottom:none;}
+.history-date{font-size:10px;color:var(--text-dim);width:55px;flex-shrink:0;}
+.history-bar-wrap{flex:1;background:var(--bg3);border-radius:3px;height:5px;overflow:hidden;}
+.history-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;}
+.history-xp{font-size:10px;color:var(--gold);width:48px;text-align:right;flex-shrink:0;}
+.lv-event{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);}
+.lv-badge{font-family:'Cinzel',serif;font-size:11px;font-weight:900;color:var(--gold2);background:var(--bg3);border:1px solid var(--gold);border-radius:6px;padding:4px 8px;flex-shrink:0;}
+.lv-info{flex:1;} .lv-title{font-size:12px;color:var(--text);} .lv-date{font-size:10px;color:var(--text-dim);}
+.lv-days{font-size:10px;color:var(--gold);margin-left:auto;}
 
-  /* TIER LEGEND */
-  .tier-legend{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
-  .tier-legend-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;align-items:center;gap:10px;}
-  .tier-legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
-  .tier-legend-info{}
-  .tier-legend-name{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
-  .tier-legend-xp{font-size:10px;color:var(--text-dim);margin-top:2px;}
+/* ═══════════ CUSTOMIZE ═══════════ */
+.cz-section{margin:0 14px 18px;}
+.cz-section-header{display:flex;align-items:center;justify-content:space-between;padding:12px 0 9px;border-bottom:1px solid var(--border);margin-bottom:10px;}
+.cz-section-title{font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;}
+.cz-add-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--gold);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 10px;cursor:pointer;}
+.cz-add-btn:active{background:var(--bg3);}
+.cz-input{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);outline:none;transition:border-color 0.2s;width:100%;}
+.cz-input:focus{border-color:var(--gold);}
+.cz-input::placeholder{color:var(--text-dim);}
+.cz-input.xp-input{width:80px;text-align:center;}
+.cz-save-btn{background:var(--gold);border:none;border-radius:8px;color:var(--bg);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;padding:11px 16px;cursor:pointer;text-transform:uppercase;transition:opacity 0.2s;}
+.cz-save-btn:active{opacity:0.8;}
+.cz-save-btn.full{width:100%;margin-top:10px;}
+.cz-profile-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+.cz-profile-label{font-size:10px;color:var(--text-dim);letter-spacing:2px;width:80px;flex-shrink:0;text-transform:uppercase;}
+.cz-cat-block{background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.cz-cat-header{display:flex;align-items:center;gap:9px;padding:11px 13px;border-bottom:1px solid var(--border);}
+.cz-cat-color-dot{width:15px;height:15px;border-radius:50%;flex-shrink:0;cursor:pointer;transition:transform 0.15s;}
+.cz-cat-color-dot:hover{transform:scale(1.3);}
+.cz-cat-name-input{flex:1;background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--text);letter-spacing:1px;text-transform:uppercase;min-width:0;}
+.cz-cat-del{background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;line-height:1;padding:0 3px;flex-shrink:0;}
+.cz-cat-del:active{color:var(--red);}
+.cz-toggle-btn{background:none;border:none;color:var(--text-dim);font-size:12px;cursor:pointer;padding:2px 4px;flex-shrink:0;transition:transform 0.2s;}
+.cz-toggle-btn.open{transform:rotate(180deg);}
+.cz-cat-body{padding:9px 11px 13px;}
+.cz-quest-row{display:flex;align-items:center;gap:7px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 9px;margin-bottom:7px;}
+.cz-quest-texts{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0;}
+.cz-q-name{background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);width:100%;}
+.cz-q-desc{background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);width:100%;}
+.cz-q-xp{width:44px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 4px;font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);text-align:center;outline:none;flex-shrink:0;}
+.cz-q-xp:focus{border-color:var(--gold);}
+.cz-q-freq{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 4px;font-family:'Space Mono',monospace;font-size:9px;color:var(--text-mid);outline:none;flex-shrink:0;cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center;width:60px;}
+.cz-q-freq:focus{border-color:var(--gold);}
+.cz-q-del{background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;line-height:1;padding:2px 3px;flex-shrink:0;}
+.cz-q-del:active{color:var(--red);}
+.cz-add-quest-row{display:flex;gap:6px;margin-top:6px;align-items:center;}
+.cz-add-quest-name{flex:1;background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:8px 10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);outline:none;}
+.cz-add-quest-name:focus{border-color:var(--gold);border-style:solid;}
+.cz-add-quest-xp{width:46px;background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:8px 4px;font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);text-align:center;outline:none;}
+.cz-add-quest-xp:focus{border-color:var(--gold);border-style:solid;}
+.cz-add-quest-freq{background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:8px 6px;font-family:'Space Mono',monospace;font-size:9px;color:var(--text-mid);outline:none;cursor:pointer;width:60px;appearance:none;-webkit-appearance:none;text-align:center;}
+.cz-add-quest-freq:focus{border-color:var(--gold);border-style:solid;}
+.cz-add-quest-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--gold2);font-size:18px;line-height:1;padding:4px 10px;cursor:pointer;flex-shrink:0;}
+.cz-add-quest-btn:active{background:var(--gold);color:var(--bg);}
+.color-picker-popup{position:absolute;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px;display:flex;flex-wrap:wrap;gap:7px;width:182px;z-index:500;top:36px;left:0;box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+.color-swatch{width:25px;height:25px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s,transform 0.15s;}
+.color-swatch:hover{transform:scale(1.15);}
+.color-swatch.selected{border-color:white;}
+.cz-danger-btn{width:100%;background:none;border:1px solid var(--red);border-radius:8px;color:var(--red);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;padding:12px;cursor:pointer;text-transform:uppercase;}
+.cz-danger-btn:active{background:rgba(192,57,43,0.1);}
 
-  /* CAT BLOCKS */
-  .cz-cat-block{background:var(--bg3);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;}
-  .cz-cat-header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);}
-  .cz-cat-color-dot{width:16px;height:16px;border-radius:50%;flex-shrink:0;cursor:pointer;transition:transform 0.15s;}
-  .cz-cat-color-dot:hover{transform:scale(1.3);}
-  .cz-cat-name-input{flex:1;background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:var(--text);letter-spacing:1px;text-transform:uppercase;min-width:0;}
-  .cz-cat-del{background:none;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;line-height:1;padding:0 4px;flex-shrink:0;}
-  .cz-cat-del:active{color:var(--red);}
-  .cz-toggle-btn{background:none;border:none;color:var(--text-dim);font-size:12px;cursor:pointer;padding:2px 4px;flex-shrink:0;transition:transform 0.2s;}
-  .cz-toggle-btn.open{transform:rotate(180deg);}
-  .cz-cat-body{padding:10px 12px 14px;}
+/* ═══════════ AI TAB ═══════════ */
+#screen-ai{display:flex;flex-direction:column;padding-bottom:0;}
+.ai-topbar{padding:16px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10;flex-shrink:0;}
+.ai-messages{flex:1;overflow-y:auto;padding:14px 14px 10px;display:flex;flex-direction:column;gap:12px;min-height:0;padding-bottom:170px;}
+.ai-messages::-webkit-scrollbar{width:0;}
 
-  /* QUEST ROW IN FORGE */
-  .cz-quest-row{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 10px;margin-bottom:8px;}
-  .cz-quest-texts{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;}
-  .cz-q-name{background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);width:100%;}
-  .cz-q-desc{background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:10px;color:var(--text-dim);width:100%;}
-  .cz-q-del{background:none;border:none;color:var(--text-dim);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;}
-  .cz-q-del:active{color:var(--red);}
+.ai-msg{display:flex;flex-direction:column;max-width:88%;}
+.ai-msg.user{align-self:flex-end;align-items:flex-end;}
+.ai-msg.assistant{align-self:flex-start;align-items:flex-start;}
+.ai-bubble{padding:11px 14px;border-radius:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+.ai-msg.user .ai-bubble{background:var(--gold);color:var(--bg);border-radius:12px 12px 3px 12px;}
+.ai-msg.assistant .ai-bubble{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-radius:12px 12px 12px 3px;}
+.ai-msg-time{font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:3px;padding:0 3px;}
 
-  /* TIER SELECTOR */
-  .tier-selector{display:flex;gap:4px;flex-shrink:0;}
-  .tier-btn{border:none;border-radius:5px;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:0.5px;padding:4px 6px;cursor:pointer;opacity:0.35;transition:opacity 0.15s,transform 0.1s;text-transform:uppercase;line-height:1.2;}
-  .tier-btn:active{transform:scale(0.92);}
-  .tier-btn.selected{opacity:1;}
-  .tier-btn.easy{background:rgba(39,174,96,0.2);color:var(--tier-easy);border:1px solid var(--tier-easy);}
-  .tier-btn.medium{background:rgba(243,156,18,0.2);color:var(--tier-medium);border:1px solid var(--tier-medium);}
-  .tier-btn.hard{background:rgba(231,76,60,0.2);color:var(--tier-hard);border:1px solid var(--tier-hard);}
-  .tier-btn.legendary{background:rgba(155,89,182,0.2);color:var(--tier-legendary);border:1px solid var(--tier-legendary);}
+.ai-action-card{background:var(--bg3);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;margin-top:4px;max-width:88%;align-self:flex-start;}
+.ai-action-title{font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:2px;color:var(--gold);margin-bottom:6px;text-transform:uppercase;}
+.ai-action-item{font-size:11px;color:var(--text-mid);padding:2px 0;display:flex;align-items:center;gap:6px;}
+.ai-action-item::before{content:'✦';color:var(--gold);font-size:8px;}
 
-  /* ADD NEW QUEST ROW */
-  .cz-add-quest-row{display:flex;gap:8px;margin-top:8px;align-items:center;}
-  .cz-add-quest-name{flex:1;background:var(--bg);border:1px dashed var(--border);border-radius:8px;padding:9px 10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);outline:none;}
-  .cz-add-quest-name:focus{border-color:var(--gold);border-style:solid;}
-  .cz-add-quest-btn{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--gold2);font-size:20px;line-height:1;padding:4px 12px;cursor:pointer;flex-shrink:0;}
-  .cz-add-quest-btn:active{background:var(--gold);color:var(--bg);}
-  .cz-add-tier-row{display:flex;gap:6px;margin-top:6px;align-items:center;}
-  .cz-add-tier-label{font-size:9px;color:var(--text-dim);letter-spacing:2px;text-transform:uppercase;flex-shrink:0;}
+.ai-typing{display:flex;gap:5px;align-items:center;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px 12px 12px 3px;width:fit-content;}
+.ai-typing span{width:7px;height:7px;border-radius:50%;background:var(--text-dim);animation:typingPulse 1.4s infinite ease-in-out;}
+.ai-typing span:nth-child(2){animation-delay:0.2s;}
+.ai-typing span:nth-child(3){animation-delay:0.4s;}
+@keyframes typingPulse{0%,80%,100%{transform:scale(0.7);opacity:0.4;}40%{transform:scale(1);opacity:1;}}
 
-  /* COLOR PICKER */
-  .color-picker-popup{position:absolute;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;width:188px;z-index:500;top:40px;left:0;}
-  .color-swatch{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color 0.15s,transform 0.15s;}
-  .color-swatch:hover{transform:scale(1.15);}
-  .color-swatch.selected{border-color:white;}
+.ai-input-area{position:fixed;bottom:63px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg2);border-top:1px solid var(--border);padding:10px 12px;z-index:99;}
+.ai-input-row{display:flex;gap:8px;align-items:flex-end;}
+.ai-input{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);outline:none;resize:none;max-height:100px;line-height:1.5;transition:border-color 0.2s;}
+.ai-input:focus{border-color:var(--gold);}
+.ai-input::placeholder{color:var(--text-dim);}
+.ai-send-btn{background:var(--gold);border:none;border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:opacity 0.2s;}
+.ai-send-btn:active{opacity:0.7;}
+.ai-send-btn:disabled{opacity:0.3;cursor:default;}
+.ai-send-btn svg{width:18px;height:18px;}
 
-  .cz-danger-btn{width:100%;background:none;border:1px solid var(--red);border-radius:8px;color:var(--red);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;padding:12px;cursor:pointer;text-transform:uppercase;}
-  .cz-danger-btn:active{background:rgba(192,57,43,0.1);}
+.ai-suggestions{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;}
+.ai-suggestions::-webkit-scrollbar{display:none;}
+.ai-suggest-chip{background:var(--bg3);border:1px solid var(--border);border-radius:16px;color:var(--text-mid);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:5px 11px;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
+.ai-suggest-chip:active{border-color:var(--gold);color:var(--gold);}
 
-  /* MODALS */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.4s;}
-  .modal-overlay.show{opacity:1;pointer-events:all;}
-  .levelup-card{text-align:center;padding:40px 30px;position:relative;animation:levelPop 0.6s cubic-bezier(0.175,0.885,0.32,1.275) forwards;}
-  @keyframes levelPop{from{transform:scale(0.6) translateY(30px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
-  .levelup-rays{position:absolute;inset:0;background:conic-gradient(from 0deg,transparent 0deg,var(--gold-glow) 20deg,transparent 40deg,transparent 100deg,var(--gold-glow) 120deg,transparent 140deg,transparent 220deg,var(--gold-glow) 240deg,transparent 260deg);border-radius:50%;animation:raysSpin 8s linear infinite;opacity:0.5;}
-  @keyframes raysSpin{to{transform:rotate(360deg);}}
-  .levelup-emblem{width:100px;height:100px;margin:0 auto 20px;background:radial-gradient(circle,var(--gold2),var(--gold));border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 60px var(--gold),0 0 120px rgba(201,146,42,0.4);position:relative;z-index:2;}
-  .levelup-num{font-family:'Cinzel',serif;font-size:42px;font-weight:900;color:var(--bg);line-height:1;}
-  .levelup-text{font-family:'Cinzel',serif;font-size:28px;font-weight:900;color:var(--gold2);letter-spacing:4px;text-transform:uppercase;position:relative;z-index:2;margin-bottom:8px;}
-  .levelup-rank{font-size:13px;color:var(--text-mid);letter-spacing:3px;margin-bottom:30px;position:relative;z-index:2;}
-  .levelup-dismiss{background:var(--bg3);border:1px solid var(--gold);color:var(--gold);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:12px 30px;border-radius:6px;cursor:pointer;position:relative;z-index:2;}
-  .levelup-dismiss:active{background:var(--gold);color:var(--bg);}
+.ai-welcome{text-align:center;padding:30px 20px;color:var(--text-dim);}
+.ai-welcome-icon{font-size:38px;margin-bottom:14px;}
+.ai-welcome-title{font-family:'Cinzel',serif;font-size:16px;font-weight:900;color:var(--gold2);letter-spacing:3px;margin-bottom:8px;}
+.ai-welcome-body{font-size:11px;line-height:1.9;letter-spacing:0.5px;}
 
-  .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;padding:24px;}
-  .confirm-overlay.show{opacity:1;pointer-events:all;}
-  .confirm-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:28px 24px;width:100%;max-width:320px;}
-  .confirm-title{font-family:'Cinzel',serif;font-size:14px;font-weight:900;color:var(--text);margin-bottom:10px;letter-spacing:2px;}
-  .confirm-body{font-size:11px;color:var(--text-dim);line-height:1.8;margin-bottom:24px;}
-  .confirm-btns{display:flex;gap:10px;}
-  .confirm-cancel{flex:1;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-mid);font-family:'Space Mono',monospace;font-size:11px;padding:10px;cursor:pointer;}
-  .confirm-ok{flex:1;background:var(--red);border:none;border-radius:8px;color:white;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:10px;cursor:pointer;}
+/* MODALS */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.4s;}
+.modal-overlay.show{opacity:1;pointer-events:all;}
+.levelup-card{text-align:center;padding:40px 28px;position:relative;animation:levelPop 0.6s cubic-bezier(0.175,0.885,0.32,1.275) forwards;}
+@keyframes levelPop{from{transform:scale(0.6) translateY(30px);opacity:0;}to{transform:scale(1) translateY(0);opacity:1;}}
+.levelup-rays{position:absolute;inset:0;background:conic-gradient(from 0deg,transparent 0deg,var(--gold-glow) 20deg,transparent 40deg,transparent 100deg,var(--gold-glow) 120deg,transparent 140deg,transparent 220deg,var(--gold-glow) 240deg,transparent 260deg);border-radius:50%;animation:raysSpin 8s linear infinite;opacity:0.5;}
+@keyframes raysSpin{to{transform:rotate(360deg);}}
+.levelup-emblem{width:96px;height:96px;margin:0 auto 18px;background:radial-gradient(circle,var(--gold2),var(--gold));border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 0 60px var(--gold),0 0 120px rgba(201,146,42,0.4);position:relative;z-index:2;}
+.levelup-num{font-family:'Cinzel',serif;font-size:40px;font-weight:900;color:var(--bg);line-height:1;}
+.levelup-text{font-family:'Cinzel',serif;font-size:26px;font-weight:900;color:var(--gold2);letter-spacing:4px;text-transform:uppercase;position:relative;z-index:2;margin-bottom:7px;}
+.levelup-rank{font-size:12px;color:var(--text-mid);letter-spacing:3px;margin-bottom:28px;position:relative;z-index:2;}
+.levelup-dismiss{background:var(--bg3);border:1px solid var(--gold);color:var(--gold);font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:11px 28px;border-radius:6px;cursor:pointer;position:relative;z-index:2;}
+.levelup-dismiss:active{background:var(--gold);color:var(--bg);}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:2000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;padding:22px;}
+.confirm-overlay.show{opacity:1;pointer-events:all;}
+.confirm-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:26px 22px;width:100%;max-width:320px;}
+.confirm-title{font-family:'Cinzel',serif;font-size:14px;font-weight:900;color:var(--text);margin-bottom:9px;letter-spacing:2px;}
+.confirm-body{font-size:11px;color:var(--text-dim);line-height:1.8;margin-bottom:22px;}
+.confirm-btns{display:flex;gap:9px;}
+.confirm-cancel{flex:1;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text-mid);font-family:'Space Mono',monospace;font-size:11px;padding:10px;cursor:pointer;}
+.confirm-ok{flex:1;background:var(--red);border:none;border-radius:8px;color:white;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:10px;cursor:pointer;}
 
-  .xp-pop{position:fixed;pointer-events:none;font-family:'Cinzel',serif;font-size:18px;font-weight:900;color:var(--gold2);z-index:500;animation:xpFloat 1.5s ease-out forwards;}
-  @keyframes xpFloat{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(1.3);}}
-  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 18px;font-size:11px;color:var(--text-mid);letter-spacing:1px;opacity:0;pointer-events:none;transition:all 0.3s;z-index:300;white-space:nowrap;}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .empty-state{text-align:center;padding:40px 20px;color:var(--text-dim);font-size:11px;letter-spacing:2px;line-height:2;}
-  .empty-state .em{font-size:32px;display:block;margin-bottom:12px;}
-  ::-webkit-scrollbar{width:0;}
+.xp-pop{position:fixed;pointer-events:none;font-family:'Cinzel',serif;font-size:18px;font-weight:900;color:var(--gold2);z-index:500;animation:xpFloat 1.5s ease-out forwards;}
+@keyframes xpFloat{0%{opacity:1;transform:translateY(0) scale(1);}100%{opacity:0;transform:translateY(-80px) scale(1.3);}}
+.toast{position:fixed;bottom:105px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 16px;font-size:11px;color:var(--text-mid);letter-spacing:1px;opacity:0;pointer-events:none;transition:all 0.3s;z-index:300;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.empty-state{text-align:center;padding:36px 18px;color:var(--text-dim);font-size:11px;letter-spacing:2px;line-height:2;}
+.empty-state .em{font-size:30px;display:block;margin-bottom:10px;}
+::-webkit-scrollbar{width:0;}
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- HOME -->
-  <div class="screen active" id="screen-home">
-    <div class="topbar">
-      <div><div class="topbar-title">Ascend</div><div class="topbar-sub">LIFE RPG</div></div>
-      <div class="day-badge" id="home-date-badge">MON · WK1</div>
-    </div>
-    <div class="hero-card">
-      <div class="hero-rank" id="hero-rank">INITIATE</div>
-      <div class="hero-name" id="hero-name">WARRIOR</div>
-      <div class="hero-class" id="hero-class">BEGIN YOUR ASCENT</div>
-      <div class="level-row"><div class="level-num" id="hero-level">1</div><div class="level-label">LEVEL</div></div>
-      <div class="xp-info"><span id="xp-current-label">0 XP</span><span id="xp-next-label">Next: 800 XP</span></div>
-      <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar" style="width:0%"></div></div>
-      <div class="days-to-level" id="days-to-next">— complete quests to begin —</div>
-    </div>
-    <div class="stat-grid">
-      <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-label">Today's XP</div><div class="stat-value gold" id="today-xp">0</div></div>
-      <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-label">Streak</div><div class="stat-value green" id="streak-val">0 days</div></div>
-      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Today's Quests</div><div class="stat-value" id="quests-done-val">0 / 0</div></div>
-      <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-label">Total XP</div><div class="stat-value" id="total-xp-val">0</div></div>
-    </div>
-    <div class="daily-cap-bar">
-      <div class="cap-header"><div class="cap-label">Daily XP Cap</div><div class="cap-num" id="cap-num">0 / 420</div></div>
-      <div class="cap-bar-outer"><div class="cap-bar-inner" id="cap-bar" style="width:0%"></div></div>
-      <div class="cap-note" id="cap-note">Levels are earned — not rushed.</div>
-    </div>
+<!-- HOME -->
+<div class="screen active" id="screen-home">
+  <div class="topbar">
+    <div><div class="topbar-title">Ascend</div><div class="topbar-sub">LIFE RPG</div></div>
+    <div class="day-badge" id="home-date-badge">MON · WK1</div>
   </div>
-
-  <!-- QUESTS -->
-  <div class="screen" id="screen-quests">
-    <div class="topbar">
-      <div><div class="topbar-title">Daily Quests</div><div class="topbar-sub">RESETS AT MIDNIGHT</div></div>
-      <div class="day-badge" id="quests-date-badge">MON</div>
-    </div>
-    <div class="quest-header">
-      <div class="quest-header-title">TODAY'S TRIALS</div>
-      <div class="quest-completed-count" id="quest-count-label">0 completed</div>
-    </div>
-    <div id="quest-list-container"></div>
+  <div class="hero-card">
+    <div class="hero-rank" id="hero-rank">INITIATE</div>
+    <div class="hero-name" id="hero-name">WARRIOR</div>
+    <div class="hero-class" id="hero-class">BEGIN YOUR ASCENT</div>
+    <div class="level-row"><div class="level-num" id="hero-level">1</div><div class="level-label">LEVEL</div></div>
+    <div class="xp-info"><span id="xp-current-label">0 XP</span><span id="xp-next-label">Next: 800 XP</span></div>
+    <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar" style="width:0%"></div></div>
+    <div class="days-to-level" id="days-to-next">— complete quests to begin —</div>
   </div>
-
-  <!-- STATS -->
-  <div class="screen" id="screen-stats">
-    <div class="topbar"><div><div class="topbar-title">Chronicle</div><div class="topbar-sub">YOUR JOURNEY</div></div></div>
-    <div class="stats-section"><div class="section-title">This Week</div><div class="week-grid" id="week-grid"></div></div>
-    <div class="stats-section"><div class="section-title">Level History</div><div id="level-history"></div></div>
-    <div class="stats-section"><div class="section-title">XP History (Last 14 days)</div><div id="history-list"></div></div>
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-label">Today's XP</div><div class="stat-value gold" id="today-xp">0</div></div>
+    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-label">Streak</div><div class="stat-value green" id="streak-val">0 days</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Quests Today</div><div class="stat-value" id="quests-done-val">0 / 0</div></div>
+    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-label">Total XP</div><div class="stat-value" id="total-xp-val">0</div></div>
   </div>
-
-  <!-- FORGE -->
-  <div class="screen" id="screen-customize">
-    <div class="topbar"><div><div class="topbar-title">Forge</div><div class="topbar-sub">SHAPE YOUR PATH</div></div></div>
-
-    <div class="cz-section" style="margin-top:16px">
-      <div class="cz-section-header"><div class="cz-section-title">Profile</div></div>
-      <div class="cz-profile-row">
-        <div class="cz-profile-label">Name</div>
-        <input class="cz-input" id="cz-hero-name" placeholder="Your warrior name" maxlength="20">
-      </div>
-      <button class="cz-save-btn" onclick="saveProfile()">SAVE PROFILE</button>
-    </div>
-
-    <div class="cz-section">
-      <div class="cz-section-header"><div class="cz-section-title">Difficulty Tiers</div></div>
-      <div class="tier-legend" id="tier-legend"></div>
-    </div>
-
-    <div class="cz-section">
-      <div class="cz-section-header">
-        <div class="cz-section-title">Quest Board</div>
-        <button class="cz-add-btn" onclick="addCategory()">+ Category</button>
-      </div>
-      <div id="cz-categories"></div>
-    </div>
-
-    <div class="cz-section">
-      <div class="cz-section-header"><div class="cz-section-title" style="color:#c0392b">Danger Zone</div></div>
-      <button class="cz-danger-btn" onclick="confirmReset()">RESET ALL PROGRESS</button>
-    </div>
-    <div style="height:10px"></div>
+  <div class="daily-cap-bar">
+    <div class="cap-header"><div class="cap-label">Daily XP Cap</div><div class="cap-num" id="cap-num">0 / 420</div></div>
+    <div class="cap-bar-outer"><div class="cap-bar-inner" id="cap-bar" style="width:0%"></div></div>
+    <div class="cap-note" id="cap-note">Levels are earned — not rushed.</div>
   </div>
-
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>HOME
-    </button>
-    <button class="nav-btn" id="nav-quests" onclick="navigate('quests')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>QUESTS
-    </button>
-    <button class="nav-btn" id="nav-stats" onclick="navigate('stats')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>CHRONICLE
-    </button>
-    <button class="nav-btn" id="nav-customize" onclick="navigate('customize')">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>FORGE
-    </button>
-  </nav>
-
-  <!-- LEVEL UP MODAL -->
-  <div class="modal-overlay" id="levelup-modal">
-    <div class="levelup-card">
-      <div class="levelup-rays"></div>
-      <div class="levelup-emblem"><div class="levelup-num" id="modal-level">2</div></div>
-      <div class="levelup-text">LEVEL UP!</div>
-      <div class="levelup-rank" id="modal-rank">APPRENTICE</div>
-      <button class="levelup-dismiss" onclick="dismissLevelUp()">CLAIM ✦</button>
-    </div>
-  </div>
-
-  <!-- CONFIRM MODAL -->
-  <div class="confirm-overlay" id="confirm-overlay">
-    <div class="confirm-card">
-      <div class="confirm-title" id="confirm-title">Are you sure?</div>
-      <div class="confirm-body" id="confirm-body">This cannot be undone.</div>
-      <div class="confirm-btns">
-        <button class="confirm-cancel" onclick="closeConfirm()">CANCEL</button>
-        <button class="confirm-ok" id="confirm-ok-btn">CONFIRM</button>
-      </div>
-    </div>
-  </div>
-  <div class="toast" id="toast"></div>
 </div>
 
-<script>
-// ── TIERS ──
-const TIERS = {
-  easy:      { label:'Easy',      xp:25,  color:'#27ae60', cssVar:'var(--tier-easy)'      },
-  medium:    { label:'Medium',    xp:50,  color:'#f39c12', cssVar:'var(--tier-medium)'    },
-  hard:      { label:'Hard',      xp:80,  color:'#e74c3c', cssVar:'var(--tier-hard)'      },
-  legendary: { label:'Legendary', xp:120, color:'#9b59b6', cssVar:'var(--tier-legendary)' },
-};
+<!-- QUESTS -->
+<div class="screen" id="screen-quests">
+  <div class="topbar">
+    <div><div class="topbar-title">Quests</div><div class="topbar-sub">RESETS AT MIDNIGHT / WEEKLY</div></div>
+    <div class="day-badge" id="quests-date-badge">MON</div>
+  </div>
+  <div class="quest-filters">
+    <button class="filter-btn active" onclick="setFilter('all',this)">ALL</button>
+    <button class="filter-btn" onclick="setFilter('daily',this)">DAILY</button>
+    <button class="filter-btn" onclick="setFilter('weekly',this)">WEEKLY</button>
+    <button class="filter-btn" onclick="setFilter('longterm',this)">LONGTERM</button>
+  </div>
+  <div class="quest-header">
+    <div class="quest-header-title" id="quest-filter-label">ALL QUESTS</div>
+    <div class="quest-completed-count" id="quest-count-label">0 completed</div>
+  </div>
+  <div id="quest-list-container"></div>
+</div>
 
-const RANKS = [
+<!-- STATS -->
+<div class="screen" id="screen-stats">
+  <div class="topbar"><div><div class="topbar-title">Chronicle</div><div class="topbar-sub">YOUR JOURNEY</div></div></div>
+  <div class="stats-section">
+    <div class="section-title">This Week</div>
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+  <div class="stats-section">
+    <div class="section-title">Level History</div>
+    <div id="level-history"></div>
+  </div>
+  <div class="stats-section">
+    <div class="section-title">XP History (14 days)</div>
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<!-- AI -->
+<div class="screen" id="screen-ai" style="display:none;flex-direction:column;padding:0;">
+  <div class="ai-topbar">
+    <div><div class="topbar-title">Sage</div><div class="topbar-sub">AI LIFE COACH</div></div>
+    <div class="day-badge" id="sage-status-badge" style="cursor:pointer;" onclick="toggleKeyPanel()">⚙ SETUP</div>
+  </div>
+
+  <!-- API KEY PANEL -->
+  <div id="key-panel" style="padding:16px 15px 14px;background:var(--bg3);border-bottom:1px solid var(--border);">
+    <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--gold2);margin-bottom:6px;">OPENAI API KEY</div>
+    <div style="font-size:10px;color:var(--text-dim);line-height:1.8;margin-bottom:10px;">Get a free key at <span style="color:var(--gold)">platform.openai.com</span> → API Keys. Stored only in this browser, never shared.</div>
+    <div style="display:flex;gap:8px;">
+      <input id="oai-key-input" type="password" placeholder="sk-..." autocomplete="off"
+        style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);outline:none;">
+      <button onclick="saveKey()" style="background:var(--gold);border:none;border-radius:8px;color:var(--bg);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:10px 14px;cursor:pointer;white-space:nowrap;">SAVE</button>
+    </div>
+  </div>
+
+  <div class="ai-messages" id="ai-messages">
+    <div class="ai-welcome">
+      <div class="ai-welcome-icon">🌿</div>
+      <div class="ai-welcome-title">SAGE</div>
+      <div class="ai-welcome-body">Your AI life coach, powered by GPT-4o.
+Tell me your goals — I'll build your quest board,
+create plans, and push you when you need it.
+
+Add your OpenAI key above to get started.</div>
+    </div>
+  </div>
+
+  <div class="ai-input-area">
+    <div class="ai-suggestions" id="ai-suggestions">
+      <button class="ai-suggest-chip" onclick="sendSuggestion(this)">Make me a healthy eating plan</button>
+      <button class="ai-suggest-chip" onclick="sendSuggestion(this)">I want to get fit this month</button>
+      <button class="ai-suggest-chip" onclick="sendSuggestion(this)">Build me a morning routine</button>
+      <button class="ai-suggest-chip" onclick="sendSuggestion(this)">I need motivation right now</button>
+      <button class="ai-suggest-chip" onclick="sendSuggestion(this)">30-day challenge</button>
+      <button class="ai-suggest-chip" onclick="sendSuggestion(this)">What should I focus on?</button>
+    </div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="ai-input" placeholder="Tell Sage your goals…" rows="1"></textarea>
+      <button class="ai-send-btn" id="ai-send-btn" onclick="sendAIMessage()">
+        <svg viewBox="0 0 24 24" fill="var(--bg)"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- FORGE / CUSTOMIZE -->
+<div class="screen" id="screen-customize">
+  <div class="topbar"><div><div class="topbar-title">Forge</div><div class="topbar-sub">SHAPE YOUR PATH</div></div></div>
+  <div class="cz-section" style="margin-top:14px">
+    <div class="cz-section-header"><div class="cz-section-title">Profile</div></div>
+    <div class="cz-profile-row">
+      <div class="cz-profile-label">Name</div>
+      <input class="cz-input" id="cz-hero-name" placeholder="Your warrior name" maxlength="20">
+    </div>
+    <div class="cz-profile-row">
+      <div class="cz-profile-label">Daily Cap</div>
+      <input class="cz-input xp-input" id="cz-daily-cap" type="number" min="50" max="9999" placeholder="420">
+      <span style="font-size:10px;color:var(--text-dim);padding-left:8px;flex:1">XP / day max</span>
+    </div>
+    <button class="cz-save-btn full" onclick="saveProfile()">SAVE PROFILE</button>
+  </div>
+  <div class="cz-section">
+    <div class="cz-section-header">
+      <div class="cz-section-title">Quest Board</div>
+      <button class="cz-add-btn" onclick="addCategory()">+ Category</button>
+    </div>
+    <div id="cz-categories"></div>
+  </div>
+  <div class="cz-section">
+    <div class="cz-section-header"><div class="cz-section-title" style="color:#c0392b">Danger Zone</div></div>
+    <button class="cz-danger-btn" onclick="confirmReset()">RESET ALL PROGRESS</button>
+  </div>
+  <div style="height:10px"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-home" onclick="navigate('home')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>HOME
+  </button>
+  <button class="nav-btn" id="nav-quests" onclick="navigate('quests')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.1 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>QUESTS
+  </button>
+  <button class="nav-btn" id="nav-stats" onclick="navigate('stats')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14H7v-2h5v2zm5-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>CHRONICLE
+  </button>
+  <button class="nav-btn" id="nav-ai" onclick="navigate('ai')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>SAGE
+  </button>
+  <button class="nav-btn" id="nav-customize" onclick="navigate('customize')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>FORGE
+  </button>
+</nav>
+
+<!-- LEVEL UP MODAL -->
+<div class="modal-overlay" id="levelup-modal">
+  <div class="levelup-card">
+    <div class="levelup-rays"></div>
+    <div class="levelup-emblem"><div class="levelup-num" id="modal-level">2</div></div>
+    <div class="levelup-text">LEVEL UP!</div>
+    <div class="levelup-rank" id="modal-rank">APPRENTICE</div>
+    <button class="levelup-dismiss" onclick="dismissLevelUp()">CLAIM ✦</button>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-card">
+    <div class="confirm-title" id="confirm-title">Are you sure?</div>
+    <div class="confirm-body" id="confirm-body">This cannot be undone.</div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="closeConfirm()">CANCEL</button>
+      <button class="confirm-ok" id="confirm-ok-btn">CONFIRM</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+</div><!-- #app -->
+
+<script>
+// ════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════
+const RANKS=[
   {level:1,title:'Initiate',class:'Begin Your Ascent'},
   {level:2,title:'Apprentice',class:'The Path Unfolds'},
   {level:3,title:'Journeyman',class:'Building Discipline'},
@@ -357,255 +455,330 @@ const RANKS = [
   {level:9,title:'Master',class:'Excellence is Habit'},
   {level:10,title:'Legend',class:'You Are The Standard'},
 ];
-const LEVEL_THRESHOLDS = [0,0,800,2000,4000,7500,12000,18500,27000,38000,52000];
-const DAILY_CAP = 420;
-const CAT_COLORS = ['#e74c3c','#e67e22','#f1c40f','#27ae60','#1abc9c','#3498db','#8e44ad','#e91e8c','#ff6b6b','#00b4d8'];
-
-const DEFAULT_CATEGORIES = [
+const LEVEL_XP=[0,0,800,2000,4000,7500,12000,18500,27000,38000,52000];
+const CAT_COLORS=['#e74c3c','#e67e22','#f1c40f','#27ae60','#1abc9c','#3498db','#8e44ad','#e91e8c','#ff6b6b','#00b4d8'];
+const DEFAULT_CATEGORIES=[
   {id:'fitness',name:'Fitness',color:'#e74c3c',quests:[
-    {id:'f1',name:'Morning Workout',desc:'30+ min resistance or cardio',tier:'hard'},
-    {id:'f2',name:'Hit 8,000 Steps',desc:'Walk, jog, or move all day',tier:'medium'},
-    {id:'f3',name:'Evening Stretch',desc:'15 min mobility work',tier:'easy'},
-    {id:'f4',name:'Cold Exposure',desc:'Cold shower or outdoor session',tier:'medium'},
+    {id:'f1',name:'Morning Workout',desc:'30+ min resistance or cardio',xp:80,frequency:'daily'},
+    {id:'f2',name:'Hit 8,000 Steps',desc:'Walk, jog, or move throughout the day',xp:50,frequency:'daily'},
+    {id:'f3',name:'Evening Stretch',desc:'15 min mobility work',xp:30,frequency:'daily'},
+    {id:'f4',name:'Cold Exposure',desc:'Cold shower or cold session',xp:40,frequency:'daily'},
   ]},
   {id:'nutrition',name:'Nutrition',color:'#27ae60',quests:[
-    {id:'n1',name:'Drink 8 Glasses of Water',desc:'Stay hydrated all day',tier:'easy'},
-    {id:'n2',name:'Eat Vegetables',desc:'At least 2 servings',tier:'easy'},
-    {id:'n3',name:'Skip Junk Food',desc:'No processed snacks or fast food',tier:'medium'},
-    {id:'n4',name:'Cook at Home',desc:'Prepare at least one meal yourself',tier:'medium'},
+    {id:'n1',name:'Drink 8 Glasses of Water',desc:'Stay hydrated all day',xp:40,frequency:'daily'},
+    {id:'n2',name:'Eat Vegetables',desc:'At least 2 servings',xp:35,frequency:'daily'},
+    {id:'n3',name:'Skip Junk Food',desc:'No processed snacks or fast food',xp:50,frequency:'daily'},
+    {id:'n4',name:'Cook at Home',desc:'Prepare at least one meal yourself',xp:45,frequency:'daily'},
   ]},
   {id:'mind',name:'Mind',color:'#8e44ad',quests:[
-    {id:'m1',name:'Meditate 10 Minutes',desc:'Focused breath or mindfulness',tier:'medium'},
-    {id:'m2',name:'Read 20 Minutes',desc:'Books, not feeds',tier:'easy'},
-    {id:'m3',name:'Journal',desc:'Write thoughts, goals, or reflections',tier:'easy'},
-    {id:'m4',name:'No Social Media 1 Hour',desc:'Single uninterrupted hour',tier:'easy'},
+    {id:'m1',name:'Meditate 10 Minutes',desc:'Focused breath or mindfulness',xp:50,frequency:'daily'},
+    {id:'m2',name:'Read 20 Minutes',desc:'Books, not feeds',xp:45,frequency:'daily'},
+    {id:'m3',name:'Journal',desc:'Write thoughts, goals, or reflections',xp:40,frequency:'daily'},
+    {id:'m4',name:'No Social Media 1 Hour',desc:'Single uninterrupted hour',xp:35,frequency:'daily'},
   ]},
   {id:'sleep',name:'Sleep',color:'#3498db',quests:[
-    {id:'s1',name:'In Bed by 11 PM',desc:'Prioritize sleep consistency',tier:'medium'},
-    {id:'s2',name:'7+ Hours of Sleep',desc:'Mark this when you wake up',tier:'hard'},
-    {id:'s3',name:'No Phone Before Bed',desc:'30 min phone-free',tier:'medium'},
+    {id:'s1',name:'In Bed by 11 PM',desc:'Prioritize sleep consistency',xp:60,frequency:'daily'},
+    {id:'s2',name:'7+ Hours of Sleep',desc:'Mark this when you wake up',xp:70,frequency:'daily'},
+    {id:'s3',name:'No Phone Before Bed',desc:'30 min phone-free',xp:45,frequency:'daily'},
   ]},
   {id:'work',name:'Deep Work',color:'#e67e22',quests:[
-    {id:'w1',name:'90-Min Deep Work Session',desc:'No interruptions, full focus',tier:'legendary'},
-    {id:'w2',name:'Complete Top Priority Task',desc:'Your #1 task — done',tier:'hard'},
-    {id:'w3',name:'Plan Tomorrow',desc:"Write next day's tasks before bed",tier:'easy'},
+    {id:'w1',name:'90-Min Deep Work Session',desc:'No interruptions, full focus',xp:90,frequency:'daily'},
+    {id:'w2',name:'Complete Top Priority Task',desc:'Your #1 task — done',xp:80,frequency:'daily'},
+    {id:'w3',name:'Plan Tomorrow',desc:"Write next day's tasks before bed",xp:40,frequency:'daily'},
   ]},
 ];
 
-// ── STATE ──
-let state = {
-  heroName:'Warrior', totalXP:0, level:1, streak:0,
-  lastActiveDate:null, xpHistory:{}, levelHistory:[], dailyDone:{}, dailyXP:{},
-  categories: JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let state={
+  heroName:'Warrior',dailyCap:420,totalXP:0,level:1,streak:0,
+  lastActiveDate:null,xpHistory:{},levelHistory:[],
+  dailyDone:{},    // {dateKey: {questId: true}}
+  weeklyDone:{},   // {weekKey: {questId: true}}
+  longtermDone:{}, // {questId: true}
+  dailyXP:{},
+  categories:JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)),
 };
 
-function saveState(){ localStorage.setItem('ascend_v4', JSON.stringify(state)); }
+function saveState(){localStorage.setItem('ascend_v4',JSON.stringify(state));}
 function loadState(){
   try{
     const raw=localStorage.getItem('ascend_v4');
-    if(raw){ const s=JSON.parse(raw); state={...state,...s}; if(!state.categories||!state.categories.length) state.categories=JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)); }
+    if(raw){
+      const s=JSON.parse(raw); state={...state,...s};
+      if(!state.categories||!state.categories.length) state.categories=JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+      if(!state.weeklyDone) state.weeklyDone={};
+      if(!state.longtermDone) state.longtermDone={};
+    }
   }catch(e){}
 }
 
-function todayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function dateKey(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-function getTodayDone(){ return state.dailyDone[todayKey()]||{}; }
-function getTodayXP(){ return state.dailyXP[todayKey()]||0; }
-function tierXP(tier){ return (TIERS[tier]||TIERS.medium).xp; }
-function tierColor(tier){ return (TIERS[tier]||TIERS.medium).color; }
+function todayKey(){const d=new Date();return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
+function dateKey(d){return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
+function weekKey(d){d=d||new Date();const t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()+4-(t.getDay()||7));const y=t.getFullYear();const wn=Math.ceil(((t-new Date(y,0,1))/86400000+1)/7);return `${y}-W${p2(wn)}`;}
+function p2(n){return String(n).padStart(2,'0');}
 
-function getCurrentLevel(){ let lv=1; for(let i=2;i<LEVEL_THRESHOLDS.length;i++){ if(state.totalXP>=LEVEL_THRESHOLDS[i]) lv=i; else break; } return lv; }
-function getRankInfo(level){ return RANKS[Math.min(level,RANKS.length)-1]||RANKS[RANKS.length-1]; }
-function getAvgDailyXP(){ const keys=Object.keys(state.xpHistory); if(!keys.length) return 0; const r=keys.slice(-7); return Math.round(r.reduce((s,k)=>s+(state.xpHistory[k]||0),0)/r.length); }
-function daysToNextLevel(){ const lv=getCurrentLevel(); if(lv>=LEVEL_THRESHOLDS.length-1) return null; const needed=LEVEL_THRESHOLDS[lv+1]-state.totalXP; return Math.ceil(needed/(getAvgDailyXP()||150)); }
+function getTodayDone(){return state.dailyDone[todayKey()]||{};}
+function getWeeklyDone(){return state.weeklyDone[weekKey()]||{};}
+function getLongtermDone(){return state.longtermDone||{};}
+function getTodayXP(){return state.dailyXP[todayKey()]||0;}
 
-// ── NAVIGATION ──
-function navigate(name){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('screen-'+name).classList.add('active');
-  document.getElementById('nav-'+name).classList.add('active');
-  if(name==='home') renderHome();
-  if(name==='quests') renderQuests();
-  if(name==='stats') renderStats();
-  if(name==='customize') renderCustomize();
+function isQuestDone(q){
+  if(q.frequency==='weekly') return !!(getWeeklyDone()[q.id]);
+  if(q.frequency==='longterm') return !!(getLongtermDone()[q.id]);
+  return !!(getTodayDone()[q.id]);
 }
 
-// ── HOME ──
+function getCurrentLevel(){let lv=1;for(let i=2;i<LEVEL_XP.length;i++){if(state.totalXP>=LEVEL_XP[i])lv=i;else break;}return lv;}
+function getRankInfo(level){return RANKS[Math.min(level,RANKS.length)-1]||RANKS[RANKS.length-1];}
+function getAvgXP(){const k=Object.keys(state.xpHistory);if(!k.length)return 0;const r=k.slice(-7);return Math.round(r.reduce((s,k2)=>s+(state.xpHistory[k2]||0),0)/r.length);}
+function daysToNext(){const lv=getCurrentLevel();if(lv>=LEVEL_XP.length-1)return null;return Math.ceil((LEVEL_XP[lv+1]-state.totalXP)/(getAvgXP()||150));}
+
+// ════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════
+let currentFilter='all';
+function navigate(name){
+  document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='';});
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const sc=document.getElementById('screen-'+name);
+  if(name==='ai'){sc.style.display='flex';}
+  else{sc.style.display='block';}
+  sc.classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='ai'){ /* model panel stays as-is */ }
+  if(name==='home')renderHome();
+  if(name==='quests')renderQuests();
+  if(name==='stats')renderStats();
+  if(name==='customize')renderCustomize();
+}
+
+function setFilter(f,btn){
+  currentFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const labels={all:'ALL QUESTS',daily:'DAILY QUESTS',weekly:'WEEKLY QUESTS',longterm:'LONGTERM GOALS'};
+  document.getElementById('quest-filter-label').textContent=labels[f]||'ALL QUESTS';
+  renderQuests();
+}
+
+// ════════════════════════════════════════
+//  HOME
+// ════════════════════════════════════════
 function renderHome(){
-  const lv=getCurrentLevel(); const rank=getRankInfo(lv);
-  const todayXP=getTodayXP(); const done=getTodayDone();
-  const totalQ=state.categories.reduce((s,c)=>s+c.quests.length,0);
-  const doneCount=Object.keys(done).length;
-  const dayNames=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const lv=getCurrentLevel();const rank=getRankInfo(lv);
+  const todayXP=getTodayXP();const done=getTodayDone();
+  const allQ=state.categories.flatMap(c=>c.quests);
+  const totalQ=allQ.length;
+  const doneCount=allQ.filter(q=>isQuestDone(q)).length;
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
   const d=new Date();
-  document.getElementById('home-date-badge').textContent=`${dayNames[d.getDay()]} · WK${getWeekNumber(d)}`;
+  document.getElementById('home-date-badge').textContent=`${days[d.getDay()]} · WK${weekKey(d).split('-W')[1]}`;
   document.getElementById('hero-rank').textContent=rank.title.toUpperCase();
   document.getElementById('hero-name').textContent=(state.heroName||'Warrior').toUpperCase();
   document.getElementById('hero-class').textContent=`LEVEL ${lv} — ${rank.title.toUpperCase()}`;
   document.getElementById('hero-level').textContent=lv;
-  const thisLvXP=LEVEL_THRESHOLDS[lv]||0; const nextLvXP=LEVEL_THRESHOLDS[lv+1]||LEVEL_THRESHOLDS[lv];
-  const xpInLevel=state.totalXP-thisLvXP; const xpNeeded=nextLvXP-thisLvXP;
-  const pct=xpNeeded>0?Math.min(xpInLevel/xpNeeded*100,100):100;
-  document.getElementById('xp-current-label').textContent=`${xpInLevel} / ${xpNeeded} XP`;
+  const thisLvXP=LEVEL_XP[lv]||0;const nextLvXP=LEVEL_XP[lv+1]||LEVEL_XP[lv];
+  const xpIn=state.totalXP-thisLvXP;const xpNeed=nextLvXP-thisLvXP;
+  const pct=xpNeed>0?Math.min(xpIn/xpNeed*100,100):100;
+  document.getElementById('xp-current-label').textContent=`${xpIn} / ${xpNeed} XP`;
   document.getElementById('xp-next-label').textContent=`Lv ${lv+1}: ${nextLvXP} total`;
   document.getElementById('xp-bar').style.width=pct+'%';
-  const d2=daysToNextLevel();
+  const d2=daysToNext();
   document.getElementById('days-to-next').innerHTML=d2?`At your pace: <span>~${d2} days</span> to Level ${lv+1}`:'MAXIMUM LEVEL REACHED';
   document.getElementById('today-xp').textContent=todayXP;
   document.getElementById('streak-val').textContent=`${state.streak} day${state.streak!==1?'s':''}`;
   document.getElementById('quests-done-val').textContent=`${doneCount} / ${totalQ}`;
   document.getElementById('total-xp-val').textContent=state.totalXP;
-  const capPct=Math.min(todayXP/DAILY_CAP*100,100);
-  document.getElementById('cap-bar').style.width=capPct+'%';
-  document.getElementById('cap-num').textContent=`${todayXP} / ${DAILY_CAP}`;
-  document.getElementById('cap-note').textContent=`Levels are earned — not rushed. Max ${DAILY_CAP} XP/day.`;
+  const cap=state.dailyCap||420;
+  document.getElementById('cap-bar').style.width=Math.min(todayXP/cap*100,100)+'%';
+  document.getElementById('cap-num').textContent=`${todayXP} / ${cap}`;
+  document.getElementById('cap-note').textContent=`Levels are earned — not rushed. Max ${cap} XP/day.`;
 }
 
-// ── QUESTS ──
+// ════════════════════════════════════════
+//  QUESTS
+// ════════════════════════════════════════
 function renderQuests(){
-  const done=getTodayDone(); const todayXP=getTodayXP();
-  const doneCount=Object.keys(done).length;
-  const dayNames=['SUN','MON','TUE','WED','THU','FRI','SAT'];
-  document.getElementById('quests-date-badge').textContent=dayNames[new Date().getDay()];
-  document.getElementById('quest-count-label').textContent=`${doneCount} completed · ${todayXP} XP`;
-  const container=document.getElementById('quest-list-container'); container.innerHTML='';
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  document.getElementById('quests-date-badge').textContent=days[new Date().getDay()];
+  const allQ=state.categories.flatMap(c=>c.quests);
+  const doneCount=allQ.filter(q=>isQuestDone(q)).length;
+  const todayXP=getTodayXP();
+  document.getElementById('quest-count-label').textContent=`${doneCount} completed · ${todayXP} XP today`;
+  const container=document.getElementById('quest-list-container');container.innerHTML='';
   state.categories.forEach(cat=>{
-    if(!cat.quests.length) return;
-    const sec=document.createElement('div'); sec.className='category-section';
-    const xpLeft=cat.quests.filter(q=>!done[q.id]).reduce((s,q)=>s+tierXP(q.tier),0);
-    sec.innerHTML=`
-      <div class="category-header">
-        <div class="cat-dot" style="background:${cat.color}"></div>
-        <div class="cat-name-label">${cat.name}</div>
-        <div class="cat-xp-sum">${xpLeft>0?'+'+xpLeft+' XP':'✓ done'}</div>
-      </div>
-      <div class="quest-list" id="qlist-${cat.id}"></div>`;
+    const filtered=cat.quests.filter(q=>currentFilter==='all'||q.frequency===currentFilter);
+    if(!filtered.length)return;
+    const sec=document.createElement('div');sec.className='category-section';
+    const avail=filtered.filter(q=>!isQuestDone(q)).reduce((s,q)=>s+q.xp,0);
+    sec.innerHTML=`<div class="category-header"><div class="cat-dot" style="background:${cat.color}"></div><div class="cat-name">${cat.name}</div><div class="cat-xp-sum">${avail>0?'+'+avail+' XP':'✓ done'}</div></div><div class="quest-list" id="qlist-${cat.id}"></div>`;
     container.appendChild(sec);
     const list=sec.querySelector(`#qlist-${cat.id}`);
-    cat.quests.forEach(q=>{
-      const isDone=!!done[q.id]; const tier=TIERS[q.tier]||TIERS.medium; const atCap=todayXP>=DAILY_CAP;
-      const item=document.createElement('div'); item.className='quest-item'+(isDone?' done':'');
+    filtered.forEach(q=>{
+      const done=isQuestDone(q);
+      const atCap=todayXP>=(state.dailyCap||420)&&q.frequency!=='longterm'&&q.frequency!=='weekly';
+      const item=document.createElement('div');
+      item.className='quest-item'+(done?(q.frequency==='longterm'?' longterm-done':' done'):'');
+      const freqLabel={daily:'D',weekly:'W',longterm:'∞'}[q.frequency||'daily'];
+      const freqClass=`freq-${q.frequency||'daily'}`;
       item.innerHTML=`
         <div class="quest-check"><svg viewBox="0 0 24 24" fill="white"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
         <div class="quest-info">
           <div class="quest-name">${q.name}</div>
           <div class="quest-meta">
-            <span class="tier-pip" style="background:${tier.color}"></span>
-            <span class="quest-desc">${q.desc||tier.label}</span>
+            <span class="freq-badge ${freqClass}">${freqLabel}</span>
+            <span class="quest-desc">${q.desc}</span>
           </div>
         </div>
-        <div class="quest-xp" style="color:${isDone?'var(--text-dim)':tier.color}">${isDone?'✓':'+'+tier.xp}</div>`;
-      if(!isDone) item.addEventListener('click',()=>completeQuest(q,item,atCap));
+        <div class="quest-right"><div class="quest-xp">${done?'✓':'+'+q.xp}</div></div>`;
+      if(!done)item.addEventListener('click',()=>completeQuest(q,item,atCap));
       list.appendChild(item);
     });
   });
 }
 
-// ── COMPLETE QUEST ──
+// ════════════════════════════════════════
+//  COMPLETE QUEST
+// ════════════════════════════════════════
 function completeQuest(quest,el,atCap){
-  const today=todayKey();
-  if(!state.dailyDone[today]) state.dailyDone[today]={};
-  if(state.dailyDone[today][quest.id]) return;
-  if(atCap){ showToast("Daily XP cap reached. Rest and go again tomorrow."); return; }
-  const xp=tierXP(quest.tier);
-  const awarded=Math.min(xp, DAILY_CAP-getTodayXP());
-  state.dailyDone[today][quest.id]=true;
-  if(!state.dailyXP[today]) state.dailyXP[today]=0;
-  state.dailyXP[today]+=awarded;
-  if(!state.xpHistory[today]) state.xpHistory[today]=0;
-  state.xpHistory[today]+=awarded;
-  const prevLevel=getCurrentLevel(); state.totalXP+=awarded;
-  updateStreak(today); const newLevel=getCurrentLevel(); state.level=newLevel; saveState();
-  el.classList.add('done'); el.querySelector('.quest-check svg').style.display='block';
-  el.querySelector('.quest-xp').textContent='✓'; el.style.cursor='default'; el.replaceWith(el.cloneNode(true));
-  showXPPop(el,`+${awarded} XP`);
-  document.getElementById('quest-count-label').textContent=`${Object.keys(getTodayDone()).length} completed · ${getTodayXP()} XP`;
-  if(newLevel>prevLevel){ state.levelHistory.push({level:newLevel,date:today,totalXP:state.totalXP}); saveState(); setTimeout(()=>triggerLevelUp(newLevel),800); }
+  const today=todayKey();const wk=weekKey();
+  const freq=quest.frequency||'daily';
+
+  if(freq==='daily'){
+    if(!state.dailyDone[today])state.dailyDone[today]={};
+    if(state.dailyDone[today][quest.id])return;
+    if(atCap){showToast("Daily XP cap reached. Rest and go again tomorrow.");return;}
+    const cap=state.dailyCap||420;
+    const awarded=Math.min(quest.xp,cap-getTodayXP());
+    state.dailyDone[today][quest.id]=true;
+    if(!state.dailyXP[today])state.dailyXP[today]=0;
+    state.dailyXP[today]+=awarded;
+    if(!state.xpHistory[today])state.xpHistory[today]=0;
+    state.xpHistory[today]+=awarded;
+    awardXP(awarded,today);
+    showXPPop(el,`+${awarded} XP`);
+  } else if(freq==='weekly'){
+    if(!state.weeklyDone[wk])state.weeklyDone[wk]={};
+    if(state.weeklyDone[wk][quest.id])return;
+    state.weeklyDone[wk][quest.id]=true;
+    if(!state.dailyXP[today])state.dailyXP[today]=0;
+    state.dailyXP[today]+=quest.xp;
+    if(!state.xpHistory[today])state.xpHistory[today]=0;
+    state.xpHistory[today]+=quest.xp;
+    awardXP(quest.xp,today);
+    showXPPop(el,`+${quest.xp} XP`);
+  } else if(freq==='longterm'){
+    if(state.longtermDone[quest.id])return;
+    state.longtermDone[quest.id]=true;
+    if(!state.dailyXP[today])state.dailyXP[today]=0;
+    state.dailyXP[today]+=quest.xp;
+    if(!state.xpHistory[today])state.xpHistory[today]=0;
+    state.xpHistory[today]+=quest.xp;
+    awardXP(quest.xp,today);
+    showXPPop(el,`+${quest.xp} XP ∞`);
+  }
+
+  updateStreak(today);saveState();
+  el.classList.add(freq==='longterm'?'longterm-done':'done');
+  el.querySelector('.quest-check svg').style.display='block';
+  el.querySelector('.quest-right').innerHTML='<div class="quest-xp">✓</div>';
+  el.style.cursor='default';el.replaceWith(el.cloneNode(true));
   renderHome();
+  const allQ=state.categories.flatMap(c=>c.quests);
+  document.getElementById('quest-count-label').textContent=`${allQ.filter(q=>isQuestDone(q)).length} completed · ${getTodayXP()} XP today`;
+}
+
+function awardXP(amt,today){
+  const prev=getCurrentLevel();
+  state.totalXP+=amt;
+  const next=getCurrentLevel();
+  state.level=next;
+  if(next>prev){
+    state.levelHistory.push({level:next,date:today,totalXP:state.totalXP});
+    saveState();
+    setTimeout(()=>triggerLevelUp(next),800);
+  }
 }
 
 function updateStreak(today){
-  if(state.lastActiveDate===today) return;
-  const y=new Date(); y.setDate(y.getDate()-1);
-  if(state.lastActiveDate===dateKey(y)) state.streak+=1;
-  else if(state.lastActiveDate!==today) state.streak=1;
+  if(state.lastActiveDate===today)return;
+  const y=new Date();y.setDate(y.getDate()-1);
+  if(state.lastActiveDate===dateKey(y))state.streak+=1;
+  else if(state.lastActiveDate!==today)state.streak=1;
   state.lastActiveDate=today;
 }
 
-// ── STATS ──
-function renderStats(){ renderWeekGrid(); renderLevelHistory(); renderXPHistory(); }
+// ════════════════════════════════════════
+//  STATS
+// ════════════════════════════════════════
+function renderStats(){renderWeekGrid();renderLevelHistory();renderXPHistory();}
 function renderWeekGrid(){
-  const grid=document.getElementById('week-grid'); grid.innerHTML='';
-  const labels=['S','M','T','W','T','F','S']; const today=new Date();
-  const monday=new Date(today); monday.setDate(today.getDate()-((today.getDay()+6)%7));
+  const grid=document.getElementById('week-grid');grid.innerHTML='';
+  const labels=['S','M','T','W','T','F','S'];const today=new Date();
+  const monday=new Date(today);monday.setDate(today.getDate()-((today.getDay()+6)%7));
+  const cap=state.dailyCap||420;
   for(let i=0;i<7;i++){
-    const d=new Date(monday); d.setDate(monday.getDate()+i);
-    const key=dateKey(d); const xp=state.xpHistory[key]||0; const pct=Math.min(xp/DAILY_CAP*100,100);
-    const isToday=key===todayKey();
-    const col=document.createElement('div'); col.className='week-day';
+    const d=new Date(monday);d.setDate(monday.getDate()+i);
+    const key=dateKey(d);const xp=state.xpHistory[key]||0;
+    const pct=Math.min(xp/cap*100,100);const isToday=key===todayKey();
+    const col=document.createElement('div');col.className='week-day';
     col.innerHTML=`<div class="week-day-label">${labels[d.getDay()]}</div><div class="week-day-bar-wrap"><div class="week-day-bar${isToday?' today':''}" style="height:${pct}%"></div></div><div class="week-day-xp">${xp>0?xp:''}</div>`;
     grid.appendChild(col);
   }
 }
 function renderLevelHistory(){
-  const container=document.getElementById('level-history');
-  if(!state.levelHistory.length){ container.innerHTML='<div class="empty-state"><span class="em">⚔️</span>Complete quests consistently<br>to earn your first level up</div>'; return; }
-  container.innerHTML='';
+  const c=document.getElementById('level-history');
+  if(!state.levelHistory.length){c.innerHTML='<div class="empty-state"><span class="em">⚔️</span>Complete quests consistently<br>to earn your first level up</div>';return;}
+  c.innerHTML='';
   [...state.levelHistory].reverse().forEach((lh,idx)=>{
     const rank=getRankInfo(lh.level);
-    const prevItem=state.levelHistory[state.levelHistory.length-2-idx];
-    let elapsed=''; if(prevItem){ const diff=Math.round((new Date(lh.date)-new Date(prevItem.date))/86400000); elapsed=`+${diff}d`; }
-    const el=document.createElement('div'); el.className='lv-event';
+    const prev=state.levelHistory[state.levelHistory.length-2-idx];
+    let elapsed='';if(prev){const diff=Math.round((new Date(lh.date)-new Date(prev.date))/86400000);elapsed=`+${diff}d`;}
+    const el=document.createElement('div');el.className='lv-event';
     el.innerHTML=`<div class="lv-badge">LV ${lh.level}</div><div class="lv-info"><div class="lv-title">${rank.title}</div><div class="lv-date">${lh.date}</div></div>${elapsed?`<div class="lv-days">${elapsed}</div>`:''}`;
-    container.appendChild(el);
+    c.appendChild(el);
   });
 }
 function renderXPHistory(){
-  const container=document.getElementById('history-list'); container.innerHTML='';
-  const allKeys=Object.keys(state.xpHistory).sort().reverse().slice(0,14);
-  if(!allKeys.length){ container.innerHTML='<div class="empty-state" style="padding:20px 0;">No history yet</div>'; return; }
-  allKeys.forEach(key=>{
-    const xp=state.xpHistory[key]||0; const pct=Math.min(xp/DAILY_CAP*100,100);
+  const c=document.getElementById('history-list');c.innerHTML='';
+  const cap=state.dailyCap||420;
+  const keys=Object.keys(state.xpHistory).sort().reverse().slice(0,14);
+  if(!keys.length){c.innerHTML='<div class="empty-state" style="padding:18px 0;">No history yet</div>';return;}
+  keys.forEach(key=>{
+    const xp=state.xpHistory[key]||0;const pct=Math.min(xp/cap*100,100);
     const[,mo,dy]=key.split('-');
-    const row=document.createElement('div'); row.className='history-row';
+    const row=document.createElement('div');row.className='history-row';
     row.innerHTML=`<div class="history-date">${mo}/${dy}</div><div class="history-bar-wrap"><div class="history-bar" style="width:${pct}%"></div></div><div class="history-xp">${xp} XP</div>`;
-    container.appendChild(row);
+    c.appendChild(row);
   });
 }
 
-// ── CUSTOMIZE ──
+// ════════════════════════════════════════
+//  CUSTOMIZE
+// ════════════════════════════════════════
 function renderCustomize(){
   document.getElementById('cz-hero-name').value=state.heroName||'';
-  renderTierLegend();
+  document.getElementById('cz-daily-cap').value=state.dailyCap||420;
   renderCzCategories();
 }
-
-function renderTierLegend(){
-  const container=document.getElementById('tier-legend'); container.innerHTML='';
-  Object.entries(TIERS).forEach(([key,t])=>{
-    const item=document.createElement('div'); item.className='tier-legend-item';
-    item.innerHTML=`<div class="tier-legend-dot" style="background:${t.color}"></div><div class="tier-legend-info"><div class="tier-legend-name" style="color:${t.color}">${t.label}</div><div class="tier-legend-xp">${t.xp} XP per completion</div></div>`;
-    container.appendChild(item);
-  });
-}
-
 function saveProfile(){
   const name=document.getElementById('cz-hero-name').value.trim();
-  if(name) state.heroName=name;
-  saveState(); showToast('Profile saved ✓'); renderHome();
+  const cap=parseInt(document.getElementById('cz-daily-cap').value);
+  if(name)state.heroName=name;
+  if(cap&&cap>=50)state.dailyCap=cap;
+  saveState();showToast('Profile saved ✓');renderHome();
 }
-
 const openCats=new Set();
-
 function renderCzCategories(){
-  const container=document.getElementById('cz-categories'); container.innerHTML='';
+  const container=document.getElementById('cz-categories');container.innerHTML='';
   state.categories.forEach((cat,ci)=>{
-    const block=document.createElement('div'); block.className='cz-cat-block';
     const isOpen=openCats.has(ci);
+    const block=document.createElement('div');block.className='cz-cat-block';
     block.innerHTML=`
       <div class="cz-cat-header">
-        <div class="cz-cat-color-dot" id="czdot-${ci}" style="background:${cat.color}" title="Change color"></div>
+        <div class="cz-cat-color-dot" id="czdot-${ci}" style="background:${cat.color}"></div>
         <input class="cz-cat-name-input" value="${escHtml(cat.name)}" maxlength="20" id="czname-${ci}" placeholder="Category name">
         <button class="cz-cat-del" onclick="confirmDeleteCat(${ci})">×</button>
         <button class="cz-toggle-btn${isOpen?' open':''}" id="cztoggle-${ci}" onclick="toggleCzCat(${ci})">▼</button>
@@ -613,159 +786,461 @@ function renderCzCategories(){
       <div class="cz-cat-body" id="czbody-${ci}" style="display:${isOpen?'block':'none'}">
         <div id="czquests-${ci}"></div>
         <div class="cz-add-quest-row">
-          <input class="cz-add-quest-name" id="czadd-name-${ci}" placeholder="New quest name…">
+          <input class="cz-add-quest-name" id="czadd-name-${ci}" placeholder="New quest…">
+          <input class="cz-add-quest-xp" id="czadd-xp-${ci}" type="number" min="5" max="999" placeholder="XP">
+          <select class="cz-add-quest-freq" id="czadd-freq-${ci}">
+            <option value="daily">D</option>
+            <option value="weekly">W</option>
+            <option value="longterm">∞</option>
+          </select>
           <button class="cz-add-quest-btn" onclick="addQuest(${ci})">+</button>
-        </div>
-        <div class="cz-add-tier-row" style="margin-top:8px">
-          <span class="cz-add-tier-label">difficulty:</span>
-          <div class="tier-selector" id="czadd-tier-${ci}"></div>
         </div>
       </div>`;
     container.appendChild(block);
-    block.querySelector(`#czdot-${ci}`).addEventListener('click',e=>{ e.stopPropagation(); openColorPicker(ci,e.currentTarget); });
-    block.querySelector(`#czname-${ci}`).addEventListener('change',e=>{ state.categories[ci].name=e.target.value.trim()||'Category'; saveState(); });
-    if(isOpen){
-      renderCzQuestsForCat(ci);
-      renderAddTierSelector(ci,'medium');
-    }
+    block.querySelector(`#czdot-${ci}`).addEventListener('click',e=>{e.stopPropagation();openColorPicker(ci,e.currentTarget);});
+    block.querySelector(`#czname-${ci}`).addEventListener('change',e=>{state.categories[ci].name=e.target.value.trim()||'Category';saveState();});
+    if(isOpen)renderCzQuestsForCat(ci);
   });
 }
-
 function toggleCzCat(ci){
-  const body=document.getElementById(`czbody-${ci}`); const btn=document.getElementById(`cztoggle-${ci}`);
-  const isOpen=openCats.has(ci);
-  if(isOpen){ openCats.delete(ci); body.style.display='none'; btn.classList.remove('open'); }
-  else{ openCats.add(ci); body.style.display='block'; btn.classList.add('open'); renderCzQuestsForCat(ci); renderAddTierSelector(ci,'medium'); }
+  const body=document.getElementById(`czbody-${ci}`);const btn=document.getElementById(`cztoggle-${ci}`);
+  if(openCats.has(ci)){openCats.delete(ci);body.style.display='none';btn.classList.remove('open');}
+  else{openCats.add(ci);body.style.display='block';btn.classList.add('open');renderCzQuestsForCat(ci);}
 }
-
-// Track new-quest tier selection per category
-const addTierSelections = {};
-
-function renderAddTierSelector(ci, currentTier){
-  if(!addTierSelections[ci]) addTierSelections[ci]=currentTier||'medium';
-  const container=document.getElementById(`czadd-tier-${ci}`); if(!container) return;
-  container.innerHTML='';
-  Object.entries(TIERS).forEach(([key,t])=>{
-    const btn=document.createElement('button');
-    btn.className=`tier-btn ${key}${addTierSelections[ci]===key?' selected':''}`;
-    btn.textContent=t.label;
-    btn.onclick=()=>{ addTierSelections[ci]=key; renderAddTierSelector(ci,key); };
-    container.appendChild(btn);
-  });
-}
-
 function renderCzQuestsForCat(ci){
-  const cat=state.categories[ci];
-  const container=document.getElementById(`czquests-${ci}`); if(!container) return;
+  const cat=state.categories[ci];const container=document.getElementById(`czquests-${ci}`);if(!container)return;
   container.innerHTML='';
   cat.quests.forEach((q,qi)=>{
-    const row=document.createElement('div'); row.className='cz-quest-row';
+    const row=document.createElement('div');row.className='cz-quest-row';
     row.innerHTML=`
       <div class="cz-quest-texts">
         <input class="cz-q-name" value="${escHtml(q.name)}" maxlength="50" placeholder="Quest name">
-        <input class="cz-q-desc" value="${escHtml(q.desc||'')}" maxlength="80" placeholder="Short description (optional)">
+        <input class="cz-q-desc" value="${escHtml(q.desc||'')}" maxlength="80" placeholder="Description">
       </div>
-      <div class="tier-selector" id="tier-sel-${ci}-${qi}"></div>
+      <input class="cz-q-xp" type="number" min="5" max="999" value="${q.xp}">
+      <select class="cz-q-freq">
+        <option value="daily"${(q.frequency||'daily')==='daily'?' selected':''}>D</option>
+        <option value="weekly"${q.frequency==='weekly'?' selected':''}>W</option>
+        <option value="longterm"${q.frequency==='longterm'?' selected':''}>∞</option>
+      </select>
       <button class="cz-q-del" onclick="confirmDeleteQuest(${ci},${qi})">×</button>`;
-    row.querySelector('.cz-q-name').addEventListener('change',e=>{ state.categories[ci].quests[qi].name=e.target.value; saveState(); showToast('Saved ✓'); });
-    row.querySelector('.cz-q-desc').addEventListener('change',e=>{ state.categories[ci].quests[qi].desc=e.target.value; saveState(); });
+    row.querySelector('.cz-q-name').addEventListener('change',e=>{state.categories[ci].quests[qi].name=e.target.value;saveState();showToast('Saved ✓');});
+    row.querySelector('.cz-q-desc').addEventListener('change',e=>{state.categories[ci].quests[qi].desc=e.target.value;saveState();showToast('Saved ✓');});
+    row.querySelector('.cz-q-xp').addEventListener('change',e=>{const v=parseInt(e.target.value);if(v>=5&&v<=999){state.categories[ci].quests[qi].xp=v;saveState();showToast('XP updated ✓');}});
+    row.querySelector('.cz-q-freq').addEventListener('change',e=>{state.categories[ci].quests[qi].frequency=e.target.value;saveState();showToast('Frequency updated ✓');renderQuests();});
     container.appendChild(row);
-    renderTierSelector(`tier-sel-${ci}-${qi}`, q.tier||'medium', (newTier)=>{
-      state.categories[ci].quests[qi].tier=newTier; saveState(); showToast(`Set to ${TIERS[newTier].label} (${TIERS[newTier].xp} XP) ✓`);
-    });
   });
 }
-
-function renderTierSelector(containerId, currentTier, onChange){
-  const container=document.getElementById(containerId); if(!container) return;
-  container.innerHTML='';
-  Object.entries(TIERS).forEach(([key,t])=>{
-    const btn=document.createElement('button');
-    btn.className=`tier-btn ${key}${currentTier===key?' selected':''}`;
-    btn.textContent=t.label;
-    btn.onclick=()=>{
-      container.querySelectorAll('.tier-btn').forEach(b=>b.classList.remove('selected'));
-      btn.classList.add('selected'); onChange(key);
-    };
-    container.appendChild(btn);
-  });
-}
-
 function addQuest(ci){
   const nameEl=document.getElementById(`czadd-name-${ci}`);
-  const name=nameEl.value.trim(); const tier=addTierSelections[ci]||'medium';
-  if(!name){ showToast('Enter a quest name first.'); nameEl.focus(); return; }
+  const xpEl=document.getElementById(`czadd-xp-${ci}`);
+  const freqEl=document.getElementById(`czadd-freq-${ci}`);
+  const name=nameEl.value.trim();const xp=parseInt(xpEl.value)||50;
+  if(!name){showToast('Enter a quest name first.');nameEl.focus();return;}
   const id='q_'+Date.now();
-  state.categories[ci].quests.push({id,name,desc:'',tier});
-  nameEl.value=''; saveState(); renderCzQuestsForCat(ci); renderQuests(); renderHome();
-  showToast(`Quest added — ${TIERS[tier].label} (${TIERS[tier].xp} XP) ✓`);
+  state.categories[ci].quests.push({id,name,desc:'',xp:Math.max(5,Math.min(999,xp)),frequency:freqEl.value||'daily'});
+  nameEl.value='';xpEl.value='';freqEl.value='daily';
+  saveState();renderCzQuestsForCat(ci);renderQuests();renderHome();
+  showToast(`Quest added ✓`);
 }
-
 function confirmDeleteQuest(ci,qi){
   const q=state.categories[ci].quests[qi];
   openConfirm('Delete Quest?',`"${q.name}" will be removed. Earned XP stays.`,()=>{
-    state.categories[ci].quests.splice(qi,1); saveState(); renderCzQuestsForCat(ci); renderQuests(); renderHome(); showToast('Quest removed.');
+    state.categories[ci].quests.splice(qi,1);saveState();renderCzQuestsForCat(ci);renderQuests();renderHome();showToast('Quest removed.');
   });
 }
-
 function confirmDeleteCat(ci){
   const cat=state.categories[ci];
-  openConfirm(`Delete "${cat.name}"?`,`Removes the category and all ${cat.quests.length} quest(s). Earned XP is kept.`,()=>{
-    openCats.delete(ci); state.categories.splice(ci,1); saveState(); renderCzCategories(); renderQuests(); renderHome(); showToast('Category removed.');
+  openConfirm(`Delete "${cat.name}"?`,`Removes category and ${cat.quests.length} quest(s). Earned XP kept.`,()=>{
+    openCats.delete(ci);state.categories.splice(ci,1);saveState();renderCzCategories();renderQuests();renderHome();showToast('Category removed.');
   });
 }
-
 function addCategory(){
-  const id='cat_'+Date.now(); const color=CAT_COLORS[state.categories.length%CAT_COLORS.length];
-  state.categories.push({id,name:'New Category',color,quests:[]}); saveState();
-  const newIdx=state.categories.length-1; openCats.add(newIdx);
+  const id='cat_'+Date.now();const color=CAT_COLORS[state.categories.length%CAT_COLORS.length];
+  state.categories.push({id,name:'New Category',color,quests:[]});saveState();
+  const idx=state.categories.length-1;openCats.add(idx);
   renderCzCategories();
-  setTimeout(()=>{ const input=document.getElementById(`czname-${newIdx}`); if(input){input.focus();input.select();} },80);
-  showToast('Category added — rename it and add quests!');
+  setTimeout(()=>{const input=document.getElementById(`czname-${idx}`);if(input){input.focus();input.select();}},80);
+  showToast('Category added!');
 }
-
-// ── COLOR PICKER ──
 let _pickerCi=null;
 function openColorPicker(ci,dotEl){
   document.querySelectorAll('.color-picker-popup').forEach(p=>p.remove());
-  if(_pickerCi===ci){ _pickerCi=null; return; }
+  if(_pickerCi===ci){_pickerCi=null;return;}
   _pickerCi=ci;
-  const popup=document.createElement('div'); popup.className='color-picker-popup';
+  const popup=document.createElement('div');popup.className='color-picker-popup';
   CAT_COLORS.forEach(c=>{
-    const sw=document.createElement('div'); sw.className='color-swatch'+(state.categories[ci].color===c?' selected':''); sw.style.background=c;
-    sw.addEventListener('click',()=>{ state.categories[ci].color=c; saveState(); popup.remove(); _pickerCi=null; renderCzCategories(); renderQuests(); });
+    const sw=document.createElement('div');sw.className='color-swatch'+(state.categories[ci].color===c?' selected':'');
+    sw.style.background=c;
+    sw.addEventListener('click',()=>{state.categories[ci].color=c;saveState();popup.remove();_pickerCi=null;renderCzCategories();renderQuests();});
     popup.appendChild(sw);
   });
-  const header=dotEl.closest('.cz-cat-header'); header.style.position='relative'; header.appendChild(popup);
-  setTimeout(()=>document.addEventListener('click',function h(e){ if(!popup.contains(e.target)&&e.target!==dotEl){ popup.remove(); _pickerCi=null; document.removeEventListener('click',h); } }),50);
+  const header=dotEl.closest('.cz-cat-header');header.style.position='relative';header.appendChild(popup);
+  setTimeout(()=>document.addEventListener('click',function h(e){if(!popup.contains(e.target)&&e.target!==dotEl){popup.remove();_pickerCi=null;document.removeEventListener('click',h);}},),60);
 }
 
-// ── LEVEL UP ──
-function triggerLevelUp(lv){ const rank=getRankInfo(lv); document.getElementById('modal-level').textContent=lv; document.getElementById('modal-rank').textContent=rank.title.toUpperCase()+' · '+rank.class.toUpperCase(); document.getElementById('levelup-modal').classList.add('show'); }
-function dismissLevelUp(){ document.getElementById('levelup-modal').classList.remove('show'); }
+// ════════════════════════════════════════
+//  AI SAGE — GPT-4o via OpenAI API
+//  Works on every browser, every device
+// ════════════════════════════════════════
+let aiHistory = [];
+let aiTyping  = false;
 
-// ── CONFIRM ──
+// ── Key management ──
+function getKey(){ return localStorage.getItem('ascend_oai_key') || ''; }
+
+function saveKey(){
+  const k = document.getElementById('oai-key-input').value.trim();
+  if(!k.startsWith('sk-')){ showToast('Key must start with sk-'); return; }
+  localStorage.setItem('ascend_oai_key', k);
+  updateSageBadge();
+  document.getElementById('key-panel').style.display = 'none';
+  showToast('Key saved ✓');
+  appendSystemMsg("Key saved. I'm Sage — your AI life coach.\n\nTell me your goals and I'll build your quest board in real time.");
+}
+
+function toggleKeyPanel(){
+  const p = document.getElementById('key-panel');
+  const hidden = p.style.display === 'none';
+  p.style.display = hidden ? 'block' : 'none';
+  if(hidden){
+    const k = getKey();
+    if(k) document.getElementById('oai-key-input').value = k;
+    document.getElementById('oai-key-input').focus();
+  }
+}
+
+function updateSageBadge(){
+  const b = document.getElementById('sage-status-badge');
+  if(!b) return;
+  if(getKey()){
+    b.textContent = '● READY';
+    b.style.color = '#2ecc71';
+    b.style.borderColor = 'rgba(46,204,113,0.35)';
+  } else {
+    b.textContent = '⚙ SETUP';
+    b.style.color = 'var(--gold)';
+    b.style.borderColor = 'rgba(201,146,42,0.35)';
+  }
+}
+
+// ── App context ──
+function getAppContext(){
+  const lv = getCurrentLevel();
+  const rank = getRankInfo(lv);
+  const cats = state.categories.map(c =>
+    `[id:${c.id}] ${c.name}: ` +
+    c.quests.map(q => `${q.name}(${(q.frequency||'daily')[0].toUpperCase()},${q.xp}xp${isQuestDone(q)?',done':''})`).join(', ')
+  ).join('\n');
+  return `PLAYER: "${state.heroName||'Warrior'}" | Level ${lv} (${rank.title}) | XP ${state.totalXP} | Streak ${state.streak}d | Today ${getTodayXP()}/${state.dailyCap||420}XP\nQUEST BOARD:\n${cats}`;
+}
+
+// ── System prompt ──
+const SYSTEM = `You are Sage, a sharp and motivating AI life coach inside a gamified habit app called ASCEND. You speak in short, punchy sentences. Real talk. No fluff.
+
+Your power: you can directly modify the user's quest board using ACTIONS. When you do anything to the board, append this at the very end of your reply:
+
+ACTIONS:[{"action":"create_category","name":"Name","color":"#hex","quests":[{"name":"Quest","desc":"Short desc","xp":60,"frequency":"daily"}]}]
+
+Action types:
+- create_category: make a new category. Fields: name, color (pick from #e74c3c #e67e22 #f1c40f #27ae60 #1abc9c #3498db #8e44ad #e91e8c #ff6b6b #00b4d8), quests[]
+- add_quests: add to existing category. Fields: category_id, quests[]
+- remove_category: delete category. Fields: category_id
+- update_name: rename the hero. Fields: name
+
+Quest frequencies:
+- daily: resets midnight, XP 20-120
+- weekly: resets Monday, XP 150-350
+- longterm: one-time achievement, XP 400-900
+
+Rules:
+- For any new plan/topic → create_category (don't dump into existing ones)
+- 4-8 quests per category. Realistic. Actionable.
+- Quest names max 40 chars. Desc max 60 chars.
+- Only output ACTIONS when you're actually changing the board.
+- After any board change, end with one punchy motivational line.`;
+
+// ── Send ──
+async function sendAIMessage(){
+  const input = document.getElementById('ai-input');
+  const msg = input.value.trim();
+  if(!msg || aiTyping) return;
+  if(!getKey()){
+    document.getElementById('key-panel').style.display = 'block';
+    document.getElementById('oai-key-input').focus();
+    showToast('Add your OpenAI key first ↑');
+    return;
+  }
+  input.value = ''; input.style.height = 'auto';
+  appendUserMsg(msg);
+  aiHistory.push({ role:'user', content: msg });
+  if(aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
+  await runSage();
+}
+
+function sendSuggestion(btn){
+  document.getElementById('ai-input').value = btn.textContent;
+  sendAIMessage();
+}
+
+// ── Inference via OpenAI streaming ──
+async function runSage(){
+  aiTyping = true;
+  document.getElementById('ai-send-btn').disabled = true;
+
+  // Streaming bubble
+  const msgs = document.getElementById('ai-messages');
+  const bubble = document.createElement('div');
+  bubble.className = 'ai-msg assistant';
+  const bText = document.createElement('div');
+  bText.className = 'ai-bubble';
+  bText.textContent = '…';
+  bubble.appendChild(bText);
+  msgs.appendChild(bubble);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  let fullResponse = '';
+
+  try {
+    const payload = {
+      model: 'gpt-4o-mini',
+      stream: true,
+      max_tokens: 1000,
+      temperature: 0.75,
+      messages: [
+        { role: 'system', content: SYSTEM + '\n\n' + getAppContext() },
+        ...aiHistory,
+      ],
+    };
+
+    // Direct call to OpenAI — works from http:// and https://
+    // If running from file://, streaming won't work so we fall back to non-streaming
+    const isFile = location.protocol === 'file:';
+    let res, responseText;
+
+    if(isFile){
+      // Non-streaming fallback for file:// (no CORS issue, no stream needed)
+      res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+getKey() },
+        body: JSON.stringify({ ...payload, stream: false }),
+      });
+      if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
+      const data = await res.json();
+      fullResponse = data.choices?.[0]?.message?.content || '';
+      const ai2 = fullResponse.indexOf('ACTIONS:');
+      bText.textContent = (ai2>=0?fullResponse.slice(0,ai2):fullResponse).trim()||'…';
+      bubble.remove();
+      // jump straight to parse
+      const actIdx2 = fullResponse.indexOf('ACTIONS:');
+      const textPart2 = (actIdx2>=0?fullResponse.slice(0,actIdx2):fullResponse).trim();
+      const actPart2  = actIdx2>=0?fullResponse.slice(actIdx2+8).trim():null;
+      const actionLog2=[];
+      if(actPart2){ try{ const j=actPart2.slice(0,actPart2.lastIndexOf(']')+1); const acts=JSON.parse(j); for(const a of acts) actionLog2.push(...executeSageAction(a)); if(actionLog2.length){saveState();renderHome();renderQuests();} }catch(e){console.warn('[Sage]',e.message);} }
+      appendAssistantMsg(textPart2||'Done.', actionLog2.length?actionLog2:null);
+      aiHistory.push({role:'assistant',content:fullResponse});
+      aiTyping=false; document.getElementById('ai-send-btn').disabled=false;
+      return;
+    }
+
+    // Streaming (http:// / https://)
+    res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+getKey() },
+      body: JSON.stringify(payload),
+    });
+
+    if(!res.ok){
+      const err = await res.json().catch(()=>({}));
+      throw new Error((err.error?.message) || `HTTP ${res.status}`);
+    }
+
+    // Parse SSE stream
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, { stream:true });
+      const lines = buf.split('\n');
+      buf = lines.pop(); // keep incomplete line
+      for(const line of lines){
+        if(!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if(data === '[DONE]') break;
+        try {
+          const token = JSON.parse(data).choices?.[0]?.delta?.content || '';
+          fullResponse += token;
+          const ai = fullResponse.indexOf('ACTIONS:');
+          bText.textContent = (ai >= 0 ? fullResponse.slice(0, ai) : fullResponse).trim() || '…';
+          msgs.scrollTop = msgs.scrollHeight;
+        } catch(e){ /* partial JSON, skip */ }
+      }
+    }
+
+  } catch(err){
+    bubble.remove();
+    let hint = '';
+    if(err.message.includes('401')) hint = '\nInvalid API key — check it in setup ↑';
+    else if(err.message.includes('429')) hint = '\nRate limited — wait a moment.';
+    else if(err.message.includes('fetch')) hint = '\nNetwork error — check your connection.';
+    appendAssistantMsg('⚠ ' + err.message + hint, null);
+    aiTyping = false;
+    document.getElementById('ai-send-btn').disabled = false;
+    return;
+  }
+
+  bubble.remove();
+
+  // Split text from ACTIONS block
+  const ai = fullResponse.indexOf('ACTIONS:');
+  const textPart = (ai >= 0 ? fullResponse.slice(0, ai) : fullResponse).trim();
+  const actPart  = ai >= 0 ? fullResponse.slice(ai + 8).trim() : null;
+
+  const actionLog = [];
+  if(actPart){
+    try {
+      const jsonStr = actPart.slice(0, actPart.lastIndexOf(']') + 1);
+      const actions = JSON.parse(jsonStr);
+      for(const act of actions) actionLog.push(...executeSageAction(act));
+      if(actionLog.length){ saveState(); renderHome(); renderQuests(); }
+    } catch(e){ console.warn('[Sage] action parse fail:', e.message, actPart.slice(0,80)); }
+  }
+
+  appendAssistantMsg(textPart || 'Done.', actionLog.length ? actionLog : null);
+  aiHistory.push({ role:'assistant', content: fullResponse });
+
+  aiTyping = false;
+  document.getElementById('ai-send-btn').disabled = false;
+}
+
+// ── Execute board actions ──
+function executeSageAction(act){
+  const log = [];
+  try {
+    if(act.action === 'create_category'){
+      const id = 'sage_' + Date.now();
+      const color = act.color || CAT_COLORS[state.categories.length % CAT_COLORS.length];
+      const quests = (act.quests||[]).map((q,i) => ({
+        id:`${id}_q${i}`, name:q.name||'Quest', desc:q.desc||'',
+        xp:Math.max(5,Math.min(900,q.xp||50)), frequency:q.frequency||'daily'
+      }));
+      state.categories.push({ id, name:act.name||'New Category', color, quests });
+      log.push(`Created "${act.name}" — ${quests.length} quest(s)`);
+      quests.forEach(q => log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
+    }
+    else if(act.action === 'add_quests'){
+      const cat = state.categories.find(c => c.id === act.category_id);
+      if(cat){
+        const newQ = (act.quests||[]).map((q,i) => ({
+          id:`sage_${Date.now()}_${i}`, name:q.name||'Quest', desc:q.desc||'',
+          xp:Math.max(5,Math.min(900,q.xp||50)), frequency:q.frequency||'daily'
+        }));
+        cat.quests.push(...newQ);
+        log.push(`Added ${newQ.length} quest(s) to "${cat.name}"`);
+        newQ.forEach(q => log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
+      }
+    }
+    else if(act.action === 'remove_category'){
+      const idx = state.categories.findIndex(c => c.id === act.category_id);
+      if(idx >= 0){ log.push(`Removed "${state.categories[idx].name}"`); state.categories.splice(idx,1); }
+    }
+    else if(act.action === 'update_name'){
+      state.heroName = act.name; log.push(`Hero name → "${act.name}"`);
+    }
+  } catch(e){ log.push(`Error: ${e.message}`); }
+  return log;
+}
+
+function freqIcon(f){ return {daily:'🔵',weekly:'🟣',longterm:'🟡'}[f]||'🔵'; }
+
+// ── Message rendering ──
+function appendUserMsg(text){
+  const msgs = document.getElementById('ai-messages');
+  const div = document.createElement('div'); div.className = 'ai-msg user';
+  div.innerHTML = `<div class="ai-bubble">${escHtml(text)}</div><div class="ai-msg-time">${timeNow()}</div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+function appendAssistantMsg(text, actions){
+  const msgs = document.getElementById('ai-messages');
+  removePrevTyping();
+  const div = document.createElement('div'); div.className = 'ai-msg assistant';
+  div.innerHTML = `<div class="ai-bubble">${escHtml(text)}</div><div class="ai-msg-time">${timeNow()}</div>`;
+  msgs.appendChild(div);
+  if(actions && actions.length){
+    const card = document.createElement('div'); card.className = 'ai-action-card';
+    card.innerHTML = `<div class="ai-action-title">⚡ Actions Taken</div>${actions.map(a=>`<div class="ai-action-item">${escHtml(a)}</div>`).join('')}`;
+    msgs.appendChild(card);
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function appendSystemMsg(text){
+  const msgs = document.getElementById('ai-messages');
+  const div = document.createElement('div'); div.className = 'ai-msg assistant';
+  div.innerHTML = `<div class="ai-bubble" style="border-color:var(--gold);background:rgba(201,146,42,0.07);">${escHtml(text)}</div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+function showTyping(){
+  removePrevTyping();
+  const msgs = document.getElementById('ai-messages');
+  const div = document.createElement('div'); div.className='ai-msg assistant'; div.id='ai-typing-indicator';
+  div.innerHTML = `<div class="ai-typing"><span></span><span></span><span></span></div>`;
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+function removePrevTyping(){ const t=document.getElementById('ai-typing-indicator'); if(t)t.remove(); }
+
+// Auto-resize textarea
+document.getElementById('ai-input').addEventListener('input', function(){
+  this.style.height='auto'; this.style.height=Math.min(this.scrollHeight,100)+'px';
+});
+document.getElementById('ai-input').addEventListener('keydown', function(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendAIMessage(); }
+});
+
+// Init badge on load
+updateSageBadge();
+if(getKey()){
+  document.getElementById('key-panel').style.display='none';
+} else {
+  // Show panel open by default so user knows what to do
+  document.getElementById('key-panel').style.display='block';
+}
+
+// ════════════════════════════════════════
+//  LEVEL UP
+// ════════════════════════════════════════
+function triggerLevelUp(lv){const rank=getRankInfo(lv);document.getElementById('modal-level').textContent=lv;document.getElementById('modal-rank').textContent=rank.title.toUpperCase()+' · '+rank.class.toUpperCase();document.getElementById('levelup-modal').classList.add('show');}
+function dismissLevelUp(){document.getElementById('levelup-modal').classList.remove('show');}
+
+// ════════════════════════════════════════
+//  CONFIRM
+// ════════════════════════════════════════
 let _confirmCb=null;
-function openConfirm(title,body,onOk){ document.getElementById('confirm-title').textContent=title; document.getElementById('confirm-body').textContent=body; _confirmCb=onOk; document.getElementById('confirm-overlay').classList.add('show'); }
-function closeConfirm(){ document.getElementById('confirm-overlay').classList.remove('show'); _confirmCb=null; }
-document.getElementById('confirm-ok-btn').onclick=()=>{ if(_confirmCb) _confirmCb(); closeConfirm(); };
+function openConfirm(title,body,onOk){document.getElementById('confirm-title').textContent=title;document.getElementById('confirm-body').textContent=body;_confirmCb=onOk;document.getElementById('confirm-overlay').classList.add('show');}
+function closeConfirm(){document.getElementById('confirm-overlay').classList.remove('show');_confirmCb=null;}
+document.getElementById('confirm-ok-btn').onclick=()=>{if(_confirmCb)_confirmCb();closeConfirm();};
 
-// ── RESET ──
 function confirmReset(){
-  openConfirm('RESET ALL PROGRESS?','Wipes all XP, levels, streaks, and history. Custom quests are kept.',()=>{
-    state.totalXP=0; state.level=1; state.streak=0; state.lastActiveDate=null;
-    state.xpHistory={}; state.levelHistory=[]; state.dailyDone={}; state.dailyXP={};
-    saveState(); renderHome(); renderQuests(); showToast('Progress reset. Begin again.');
+  openConfirm('RESET ALL PROGRESS?','Wipes all XP, levels, streaks, and history. Custom quests kept. Permanent.',()=>{
+    state.totalXP=0;state.level=1;state.streak=0;state.lastActiveDate=null;
+    state.xpHistory={};state.levelHistory=[];state.dailyDone={};state.weeklyDone={};state.longtermDone={};state.dailyXP={};
+    saveState();renderHome();renderQuests();showToast('Progress reset. Begin again.');
   });
 }
 
-// ── HELPERS ──
-function showXPPop(el,text){ const rect=el.getBoundingClientRect(); const pop=document.createElement('div'); pop.className='xp-pop'; pop.textContent=text; pop.style.left=rect.left+rect.width/2-30+'px'; pop.style.top=rect.top-10+'px'; document.body.appendChild(pop); setTimeout(()=>pop.remove(),1600); }
-function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2600); }
-function getWeekNumber(d){ d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())); d.setUTCDate(d.getUTCDate()+4-(d.getUTCDay()||7)); const y=new Date(Date.UTC(d.getUTCFullYear(),0,1)); return Math.ceil((((d-y)/86400000)+1)/7); }
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+// ════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════
+function showXPPop(el,text){const rect=el.getBoundingClientRect();const pop=document.createElement('div');pop.className='xp-pop';pop.textContent=text;pop.style.left=rect.left+rect.width/2-30+'px';pop.style.top=rect.top-10+'px';document.body.appendChild(pop);setTimeout(()=>pop.remove(),1600);}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function timeNow(){const d=new Date();return `${p2(d.getHours())}:${p2(d.getMinutes())}`;}
 
-// ── INIT ──
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
 loadState();
 state.level=getCurrentLevel();
 renderHome();
