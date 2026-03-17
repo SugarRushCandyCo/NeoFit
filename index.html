@@ -321,12 +321,12 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
 <div class="screen" id="screen-ai" style="display:none;flex-direction:column;padding:0;">
   <div class="ai-topbar">
     <div><div class="topbar-title">Sage</div><div class="topbar-sub">LLAMA 3.3 · FREE</div></div>
-    <div class="day-badge" id="sage-status-badge" style="cursor:default;">⚙ SETUP</div>
+    <div class="day-badge" id="sage-status-badge" style="cursor:pointer;" onclick="toggleKeyPanel()">⚙ SETUP</div>
   </div>
 
   <!-- API KEY PANEL -->
   <div id="key-panel" style="padding:16px 15px 14px;background:var(--bg3);border-bottom:1px solid var(--border);">
-    <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--gold2);margin-bottom:6px;">GROQ API KEY (FREE)</div>
+    <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--gold2);margin-bottom:6px;">ENTER YOUR GROQ KEY</div>
     <div style="font-size:10px;color:var(--text-dim);line-height:1.8;margin-bottom:10px;">Powered by Llama 3.3 70B via Groq. Fast, free, and ready.</div>
     <div style="display:flex;gap:8px;">
       <input id="oai-key-input" type="password" placeholder="gsk_..." autocomplete="off"
@@ -891,12 +891,12 @@ function getKey(){ return localStorage.getItem('ascend_oai_key') || ''; }
 
 function saveKey(){
   const k = document.getElementById('oai-key-input').value.trim();
-  if(!k.startsWith('gsk_') && !k.startsWith('sk-')){ showToast('Groq keys start with gsk_'); return; }
+  if(!k.startsWith('gsk_')){ showToast('Groq keys start with gsk_ — get one at console.groq.com'); return; }
   localStorage.setItem('ascend_oai_key', k);
   updateSageBadge();
   document.getElementById('key-panel').style.display = 'none';
   showToast('Key saved ✓');
-  appendSystemMsg("Key saved. Running Llama 3.3 70B — completely free.\n\nI'm Sage. Tell me your goals and I'll build your quest board right now.");
+  appendSystemMsg("Key saved! I'm Sage — your AI life coach running on Llama 3.3 70B.\n\nTell me your goals and I'll build your quest board.");
 }
 
 function toggleKeyPanel(){
@@ -1155,10 +1155,8 @@ document.getElementById('ai-input').addEventListener('keydown', function(e){
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendAIMessage(); }
 });
 
-// Always force the baked key — never stale localStorage
-const _BAKED = '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';
-localStorage.setItem('ascend_oai_key', _BAKED);
-document.getElementById('key-panel').style.display = 'none';
+// Show key panel if no key saved yet
+document.getElementById('key-panel').style.display = getKey() ? 'none' : 'block';
 updateSageBadge();
 
 // ════════════════════════════════════════
