@@ -320,16 +320,16 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
 <!-- AI -->
 <div class="screen" id="screen-ai" style="display:none;flex-direction:column;padding:0;">
   <div class="ai-topbar">
-    <div><div class="topbar-title">Sage</div><div class="topbar-sub">AI LIFE COACH</div></div>
-    <div class="day-badge" id="sage-status-badge" style="cursor:pointer;" onclick="toggleKeyPanel()">⚙ SETUP</div>
+    <div><div class="topbar-title">Sage</div><div class="topbar-sub">LLAMA 3.3 · FREE</div></div>
+    <div class="day-badge" id="sage-status-badge" style="cursor:default;">⚙ SETUP</div>
   </div>
 
   <!-- API KEY PANEL -->
   <div id="key-panel" style="padding:16px 15px 14px;background:var(--bg3);border-bottom:1px solid var(--border);">
-    <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--gold2);margin-bottom:6px;">OPENAI API KEY</div>
-    <div style="font-size:10px;color:var(--text-dim);line-height:1.8;margin-bottom:10px;">Get a free key at <span style="color:var(--gold)">platform.openai.com</span> → API Keys. Stored only in this browser, never shared.</div>
+    <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--gold2);margin-bottom:6px;">GROQ API KEY (FREE)</div>
+    <div style="font-size:10px;color:var(--text-dim);line-height:1.8;margin-bottom:10px;">Powered by Llama 3.3 70B via Groq. Fast, free, and ready.</div>
     <div style="display:flex;gap:8px;">
-      <input id="oai-key-input" type="password" placeholder="sk-..." autocomplete="off"
+      <input id="oai-key-input" type="password" placeholder="gsk_..." autocomplete="off"
         style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);outline:none;">
       <button onclick="saveKey()" style="background:var(--gold);border:none;border-radius:8px;color:var(--bg);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:10px 14px;cursor:pointer;white-space:nowrap;">SAVE</button>
     </div>
@@ -339,11 +339,11 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
     <div class="ai-welcome">
       <div class="ai-welcome-icon">🌿</div>
       <div class="ai-welcome-title">SAGE</div>
-      <div class="ai-welcome-body">Your AI life coach, powered by GPT-4o.
-Tell me your goals — I'll build your quest board,
-create plans, and push you when you need it.
+      <div class="ai-welcome-body">Your AI life coach, powered by Llama 3.3 70B.
+Free forever. No credit card. Just you and your goals.
 
-Add your OpenAI key above to get started.</div>
+Get a free key at console.groq.com
+then paste it above to get started.</div>
     </div>
   </div>
 
@@ -891,12 +891,12 @@ function getKey(){ return localStorage.getItem('ascend_oai_key') || ''; }
 
 function saveKey(){
   const k = document.getElementById('oai-key-input').value.trim();
-  if(!k.startsWith('sk-')){ showToast('Key must start with sk-'); return; }
+  if(!k.startsWith('gsk_') && !k.startsWith('sk-')){ showToast('Groq keys start with gsk_'); return; }
   localStorage.setItem('ascend_oai_key', k);
   updateSageBadge();
   document.getElementById('key-panel').style.display = 'none';
   showToast('Key saved ✓');
-  appendSystemMsg("Key saved. I'm Sage — your AI life coach.\n\nTell me your goals and I'll build your quest board in real time.");
+  appendSystemMsg("Key saved. Running Llama 3.3 70B — completely free.\n\nI'm Sage. Tell me your goals and I'll build your quest board right now.");
 }
 
 function toggleKeyPanel(){
@@ -983,134 +983,90 @@ function sendSuggestion(btn){
   sendAIMessage();
 }
 
-// ── Inference via OpenAI streaming ──
+// ── Inference — simple fetch, works from file:// and http:// everywhere ──
 async function runSage(){
   aiTyping = true;
   document.getElementById('ai-send-btn').disabled = true;
-
-  // Streaming bubble
-  const msgs = document.getElementById('ai-messages');
-  const bubble = document.createElement('div');
-  bubble.className = 'ai-msg assistant';
-  const bText = document.createElement('div');
-  bText.className = 'ai-bubble';
-  bText.textContent = '…';
-  bubble.appendChild(bText);
-  msgs.appendChild(bubble);
-  msgs.scrollTop = msgs.scrollHeight;
-
-  let fullResponse = '';
+  showTyping();
 
   try {
-    const payload = {
-      model: 'gpt-4o-mini',
-      stream: true,
+    const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+    const body = JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      stream: false,
       max_tokens: 1000,
       temperature: 0.75,
       messages: [
         { role: 'system', content: SYSTEM + '\n\n' + getAppContext() },
         ...aiHistory,
       ],
-    };
-
-    // Direct call to OpenAI — works from http:// and https://
-    // If running from file://, streaming won't work so we fall back to non-streaming
-    const isFile = location.protocol === 'file:';
-    let res, responseText;
-
-    if(isFile){
-      // Non-streaming fallback for file:// (no CORS issue, no stream needed)
-      res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+getKey() },
-        body: JSON.stringify({ ...payload, stream: false }),
-      });
-      if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(e.error?.message||`HTTP ${res.status}`); }
-      const data = await res.json();
-      fullResponse = data.choices?.[0]?.message?.content || '';
-      const ai2 = fullResponse.indexOf('ACTIONS:');
-      bText.textContent = (ai2>=0?fullResponse.slice(0,ai2):fullResponse).trim()||'…';
-      bubble.remove();
-      // jump straight to parse
-      const actIdx2 = fullResponse.indexOf('ACTIONS:');
-      const textPart2 = (actIdx2>=0?fullResponse.slice(0,actIdx2):fullResponse).trim();
-      const actPart2  = actIdx2>=0?fullResponse.slice(actIdx2+8).trim():null;
-      const actionLog2=[];
-      if(actPart2){ try{ const j=actPart2.slice(0,actPart2.lastIndexOf(']')+1); const acts=JSON.parse(j); for(const a of acts) actionLog2.push(...executeSageAction(a)); if(actionLog2.length){saveState();renderHome();renderQuests();} }catch(e){console.warn('[Sage]',e.message);} }
-      appendAssistantMsg(textPart2||'Done.', actionLog2.length?actionLog2:null);
-      aiHistory.push({role:'assistant',content:fullResponse});
-      aiTyping=false; document.getElementById('ai-send-btn').disabled=false;
-      return;
-    }
-
-    // Streaming (http:// / https://)
-    res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+getKey() },
-      body: JSON.stringify(payload),
     });
 
-    if(!res.ok){
-      const err = await res.json().catch(()=>({}));
-      throw new Error((err.error?.message) || `HTTP ${res.status}`);
+    // file:// blocks direct cross-origin fetches — try proxy fallback automatically
+    const isFileProto = location.protocol === 'file:';
+    const PROXY = 'https://corsproxy.io/?url=';
+
+    async function tryFetch(url, headers){
+      return fetch(url, {
+        method: 'POST',
+        headers,
+        body,
+      });
     }
 
-    // Parse SSE stream
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buf = '';
-
-    while(true){
-      const { done, value } = await reader.read();
-      if(done) break;
-      buf += decoder.decode(value, { stream:true });
-      const lines = buf.split('\n');
-      buf = lines.pop(); // keep incomplete line
-      for(const line of lines){
-        if(!line.startsWith('data: ')) continue;
-        const data = line.slice(6).trim();
-        if(data === '[DONE]') break;
-        try {
-          const token = JSON.parse(data).choices?.[0]?.delta?.content || '';
-          fullResponse += token;
-          const ai = fullResponse.indexOf('ACTIONS:');
-          bText.textContent = (ai >= 0 ? fullResponse.slice(0, ai) : fullResponse).trim() || '…';
-          msgs.scrollTop = msgs.scrollHeight;
-        } catch(e){ /* partial JSON, skip */ }
-      }
+    let res;
+    if (!isFileProto) {
+      // Served via http/https — direct call works
+      res = await tryFetch(GROQ_URL, {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + getKey(),
+      });
+    } else {
+      // file:// — route through CORS proxy
+      res = await tryFetch(PROXY + encodeURIComponent(GROQ_URL), {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + getKey(),
+        'x-requested-with': 'XMLHttpRequest',
+      });
     }
 
-  } catch(err){
-    bubble.remove();
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'HTTP ' + res.status);
+    }
+
+    const data = await res.json();
+    const fullResponse = data.choices?.[0]?.message?.content || '';
+
+    // Split text from ACTIONS block
+    const ai = fullResponse.indexOf('ACTIONS:');
+    const textPart = (ai >= 0 ? fullResponse.slice(0, ai) : fullResponse).trim();
+    const actPart  = ai >= 0 ? fullResponse.slice(ai + 8).trim() : null;
+
+    const actionLog = [];
+    if (actPart) {
+      try {
+        const jsonStr = actPart.slice(0, actPart.lastIndexOf(']') + 1);
+        const actions = JSON.parse(jsonStr);
+        for (const act of actions) actionLog.push(...executeSageAction(act));
+        if (actionLog.length) { saveState(); renderHome(); renderQuests(); }
+      } catch(e) { console.warn('[Sage] action parse:', e.message); }
+    }
+
+    appendAssistantMsg(textPart || 'Done.', actionLog.length ? actionLog : null);
+    aiHistory.push({ role: 'assistant', content: fullResponse });
+    if (aiHistory.length > 20) aiHistory = aiHistory.slice(-20);
+
+  } catch(err) {
+    removePrevTyping();
     let hint = '';
-    if(err.message.includes('401')) hint = '\nInvalid API key — check it in setup ↑';
-    else if(err.message.includes('429')) hint = '\nRate limited — wait a moment.';
-    else if(err.message.includes('fetch')) hint = '\nNetwork error — check your connection.';
+    if (err.message.includes('401'))       hint = '\nInvalid key — tap ⚙ SETUP to update it.';
+    else if (err.message.includes('429'))  hint = '\nRate limited — wait a moment and try again.';
+    else if (err.message.includes('fetch') || err.message.includes('Network') || err.message.includes('Failed')) {
+      hint = '\n\nYou are opening this as a local file.\nFor best results, host it online — try tiiny.host (free, drag and drop).\nOr open it in the Claude artifact viewer.';
+    }
     appendAssistantMsg('⚠ ' + err.message + hint, null);
-    aiTyping = false;
-    document.getElementById('ai-send-btn').disabled = false;
-    return;
   }
-
-  bubble.remove();
-
-  // Split text from ACTIONS block
-  const ai = fullResponse.indexOf('ACTIONS:');
-  const textPart = (ai >= 0 ? fullResponse.slice(0, ai) : fullResponse).trim();
-  const actPart  = ai >= 0 ? fullResponse.slice(ai + 8).trim() : null;
-
-  const actionLog = [];
-  if(actPart){
-    try {
-      const jsonStr = actPart.slice(0, actPart.lastIndexOf(']') + 1);
-      const actions = JSON.parse(jsonStr);
-      for(const act of actions) actionLog.push(...executeSageAction(act));
-      if(actionLog.length){ saveState(); renderHome(); renderQuests(); }
-    } catch(e){ console.warn('[Sage] action parse fail:', e.message, actPart.slice(0,80)); }
-  }
-
-  appendAssistantMsg(textPart || 'Done.', actionLog.length ? actionLog : null);
-  aiHistory.push({ role:'assistant', content: fullResponse });
 
   aiTyping = false;
   document.getElementById('ai-send-btn').disabled = false;
@@ -1199,14 +1155,12 @@ document.getElementById('ai-input').addEventListener('keydown', function(e){
   if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendAIMessage(); }
 });
 
-// Init badge on load
+// Pre-bake key — user never has to touch setup
+const _BAKED = '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';
+if(!getKey()) localStorage.setItem('ascend_oai_key', _BAKED);
+// Hide setup panel entirely — key is already in
+document.getElementById('key-panel').style.display = 'none';
 updateSageBadge();
-if(getKey()){
-  document.getElementById('key-panel').style.display='none';
-} else {
-  // Show panel open by default so user knows what to do
-  document.getElementById('key-panel').style.display='block';
-}
 
 // ════════════════════════════════════════
 //  LEVEL UP
