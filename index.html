@@ -945,10 +945,7 @@ async function sendAIMessage(){
   const input = document.getElementById('ai-input');
   const msg = input.value.trim();
   if(!msg || aiTyping) return;
-  if(!getKey() || getKey().trim() === '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'){
-    showToast('Replace GROQ_API_KEY_HERE in the HTML with your key');
-    return;
-  }
+
   input.value = ''; input.style.height = 'auto';
   appendUserMsg(msg);
   aiHistory.push({ role:'user', content: msg });
