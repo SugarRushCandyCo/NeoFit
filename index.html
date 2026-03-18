@@ -20,7 +20,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{width:100%;height:100%;height:-webkit-fill-available;background:#0a0a0c;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;display:flex;justify-content:center;}
-#app{width:100%;max-width:480px;min-height:100vh;background:var(--bg);margin:0 auto;padding-top:calc(env(safe-area-inset-top,54px) + 100px);}
+#app{width:100%;max-width:480px;min-height:100vh;background:var(--bg);margin:0 auto;padding-top:calc(env(safe-area-inset-top,44px) + 50px);}
 .screen{display:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));}
 .screen.active{display:block;}
 
@@ -610,12 +610,19 @@ function renderQuests(){
           ${qDesc?`<div class="quest-meta"><span class="freq-badge ${freqClass}">${freqLabel}</span><span class="quest-desc">${qDesc}</span></div>`:''}
         </div>
         <div class="quest-right"><div class="quest-xp">${done?'✓':'+'+qXp}</div></div>`;
-      if(!done){
-        item.addEventListener('click',()=>completeQuest(q,item,atCap));
-      } else {
-        item.style.cursor='pointer';
-        item.addEventListener('click',()=>uncompleteQuest(q,item));
-      }
+      // Single tap = complete. Double tap = instant toggle (complete ↔ incomplete)
+      let lastTap = 0;
+      item.addEventListener('click', () => {
+        const now = Date.now();
+        const isDoubleTap = (now - lastTap) < 350;
+        lastTap = now;
+        if(isDoubleTap){
+          if(isQuestDone(q)) uncompleteQuest(q, item);
+          else completeQuest(q, item, atCap);
+        } else {
+          if(!isQuestDone(q)) completeQuest(q, item, atCap);
+        }
+      });
       list.appendChild(item);
     });
   });
