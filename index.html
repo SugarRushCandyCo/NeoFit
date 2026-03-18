@@ -702,15 +702,20 @@ function uncompleteQuest(quest){
   } else if(freq==='weekly'){
     if(!state.weeklyDone[wk]||!state.weeklyDone[wk][quest.id])return;
     delete state.weeklyDone[wk][quest.id];
+    state.dailyXP[today]=Math.max(0,(state.dailyXP[today]||0)-xp);
+    state.xpHistory[today]=Math.max(0,(state.xpHistory[today]||0)-xp);
     state.totalXP=Math.max(0,state.totalXP-xp);
   } else if(freq==='longterm'){
     if(!state.longtermDone[quest.id])return;
     delete state.longtermDone[quest.id];
+    state.dailyXP[today]=Math.max(0,(state.dailyXP[today]||0)-xp);
+    state.xpHistory[today]=Math.max(0,(state.xpHistory[today]||0)-xp);
     state.totalXP=Math.max(0,state.totalXP-xp);
   }
   state.level=getCurrentLevel();
   saveState();
-  showToast('Quest unmarked');
+  showXPPop2(`-${xp} XP`);
+  showToast('Quest unmarked — XP removed');
   renderQuests();
   renderHome();
 }
@@ -938,7 +943,7 @@ ACTIONS:[{"action":"create_category","name":"Name","color":"#hex","quests":[{"na
 Action types: create_category (fields: name, color, quests[]) | add_quests (fields: category_id, quests[]) | remove_category (fields: category_id) | update_name (fields: name)
 Colors: #e74c3c #e67e22 #f1c40f #27ae60 #1abc9c #3498db #8e44ad #e91e8c #ff6b6b #00b4d8
 Frequencies: daily (XP 20-120) | weekly (XP 150-350) | longterm (XP 400-900)
-Rules: 4-8 quests per category. Names max 40 chars. Desc max 60 chars. After building, one punchy motivational line.`;
+Rules: 4-8 quests per category. Quest names must be proper readable English with correct spacing — "Veggie Servings" not "VeggieServ", "Morning Workout" not "MornWorkout". No abbreviations, no camelCase, no mashed words. Names max 40 chars. Desc max 60 chars. After building, one punchy motivational line.`;
 
 // ── Send ──
 async function sendAIMessage(){
@@ -1158,6 +1163,18 @@ function confirmReset(){
 // ════════════════════════════════════════
 //  HELPERS
 // ════════════════════════════════════════
+function showXPPop2(text){
+  // Show a floating negative XP indicator in the center of screen
+  const pop=document.createElement('div');
+  pop.className='xp-pop';
+  pop.textContent=text;
+  pop.style.color='#e74c3c';
+  pop.style.left='50%';
+  pop.style.transform='translateX(-50%)';
+  pop.style.top='40%';
+  document.body.appendChild(pop);
+  setTimeout(()=>pop.remove(),1400);
+}
 function showXPPop(el,text){const rect=el.getBoundingClientRect();const pop=document.createElement('div');pop.className='xp-pop';pop.textContent=text;pop.style.left=rect.left+rect.width/2-30+'px';pop.style.top=rect.top-10+'px';document.body.appendChild(pop);setTimeout(()=>pop.remove(),1600);}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
