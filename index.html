@@ -20,9 +20,9 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{width:100%;height:100%;height:-webkit-fill-available;background:#0a0a0c;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;display:flex;justify-content:center;}
-#app{width:100%;max-width:480px;height:100%;overflow:hidden;background:var(--bg);position:fixed;top:0;left:50%;transform:translateX(-50%);padding-top:calc(env(safe-area-inset-top,54px) + 120px);}
-.screen{display:none;position:absolute;top:0;left:0;right:0;bottom:0;overflow:hidden;flex-direction:column;}
-.screen.active{display:flex;}
+#app{width:100%;max-width:480px;min-height:100vh;background:var(--bg);margin:0 auto;padding-top:calc(env(safe-area-inset-top,54px) + 100px);}
+.screen{display:none;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));}
+.screen.active{display:block;}
 
 /* TOPBAR */
 .topbar{padding:16px 18px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10;}
@@ -38,8 +38,7 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
 .nav-btn svg{width:18px;height:18px;}
 
 /* HOME */
-.screen-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:0 0 calc(90px + env(safe-area-inset-bottom,0px)) 0;}
-  .hero-card{margin:20px 14px 0;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:26px 20px;position:relative;overflow:hidden;}
+.hero-card{margin:20px 14px 0;background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:26px 20px;position:relative;overflow:hidden;}
 .hero-card::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,var(--gold-glow) 0%,transparent 70%);pointer-events:none;}
 .hero-rank{font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:5px;}
 .hero-name{font-family:'Cinzel',serif;font-size:26px;font-weight:900;color:var(--text);line-height:1;margin-bottom:3px;}
@@ -89,13 +88,13 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
 .cat-name{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--text-mid);}
 .cat-xp-sum{margin-left:auto;font-size:10px;color:var(--text-dim);}
 .quest-list{padding:0 10px;}
-.quest-item{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:border-color 0.2s;position:relative;overflow:hidden;}
+.quest-item{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:7px;display:flex;align-items:center;gap:10px;cursor:pointer;position:relative;overflow:hidden;}
 .quest-item:active{transform:scale(0.98);}
 .quest-item.done{border-color:transparent;background:rgba(46,204,113,0.05);}
 .quest-item.done::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);border-radius:3px 0 0 3px;}
 .quest-item.longterm-done{border-color:transparent;background:rgba(201,146,42,0.05);}
 .quest-item.longterm-done::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--gold);border-radius:3px 0 0 3px;}
-.quest-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.quest-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:none;}
 .quest-item.done .quest-check,.quest-item.longterm-done .quest-check{background:var(--green);border-color:var(--green);}
 .quest-check svg{width:11px;height:11px;display:none;}
 .quest-item.done .quest-check svg,.quest-item.longterm-done .quest-check svg{display:block;}
@@ -182,8 +181,7 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
 
 /* ═══════════ AI TAB ═══════════ */
   /* AI screen overrides — flex column so input stays pinned to bottom */
-  #screen-ai{overflow:hidden !important;padding:0 !important;}
-  #screen-ai.active{display:flex !important;flex-direction:column;}
+  #screen-ai.active{display:flex !important;flex-direction:column;overflow:hidden;padding:0 !important;}
 /* ai-topbar removed */
 .ai-messages{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px;min-height:0;-webkit-overflow-scrolling:touch;}
 .ai-messages::-webkit-scrollbar{width:0;}
@@ -316,7 +314,6 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
     <div class="section-title">XP History (14 days)</div>
     <div id="history-list"></div>
   </div>
-  </div>
 </div>
 
 <!-- AI -->
@@ -330,9 +327,7 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
       <div class="ai-welcome-title">SAGE</div>
       <div class="ai-welcome-body">Your AI life coach, powered by Llama 3.3 70B.
 Free forever. No credit card. Just you and your goals.
-
-Get a free key at console.groq.com
-then paste it above to get started.</div>
+</div>
     </div>
   </div>
 
@@ -382,7 +377,6 @@ then paste it above to get started.</div>
     <button class="cz-danger-btn" onclick="confirmReset()">RESET ALL PROGRESS</button>
   </div>
   <div style="height:10px"></div>
-  </div>
 </div>
 
 <!-- BOTTOM NAV -->
@@ -658,6 +652,12 @@ function completeQuest(quest,el,atCap){
     if(!state.xpHistory[today])state.xpHistory[today]=0;
     state.xpHistory[today]+=xp;
     awardXP(xp,today);
+    // Instant visual
+    el.classList.add('done');
+    const chk2=el.querySelector('.quest-check');
+    if(chk2){chk2.style.background='#2ecc71';chk2.style.borderColor='#2ecc71';const svg2=chk2.querySelector('svg');if(svg2)svg2.style.display='block';}
+    const xpEl2=el.querySelector('.quest-xp');if(xpEl2)xpEl2.textContent='✓';
+    el.style.cursor='default';el.onclick=()=>uncompleteQuest(quest,el);
     showXPPop(el,`+${xp} XP`);
   } else if(freq==='longterm'){
     if(state.longtermDone[quest.id])return;
@@ -667,6 +667,12 @@ function completeQuest(quest,el,atCap){
     if(!state.xpHistory[today])state.xpHistory[today]=0;
     state.xpHistory[today]+=xp;
     awardXP(xp,today);
+    // Instant visual
+    el.classList.add('longterm-done');
+    const chk3=el.querySelector('.quest-check');
+    if(chk3){chk3.style.background='#2ecc71';chk3.style.borderColor='#2ecc71';const svg3=chk3.querySelector('svg');if(svg3)svg3.style.display='block';}
+    const xpEl3=el.querySelector('.quest-xp');if(xpEl3)xpEl3.textContent='✓';
+    el.style.cursor='default';el.onclick=()=>uncompleteQuest(quest,el);
     showXPPop(el,`+${xp} XP ∞`);
   }
 
@@ -674,7 +680,7 @@ function completeQuest(quest,el,atCap){
   el.classList.add(freq==='longterm'?'longterm-done':'done');
   el.querySelector('.quest-check svg').style.display='block';
   el.querySelector('.quest-right').innerHTML='<div class="quest-xp">✓</div>';
-  el.style.cursor='default';el.replaceWith(el.cloneNode(true));
+  el.style.cursor='default';
   renderHome();
   const allQ=state.categories.flatMap(c=>c.quests);
   document.getElementById('quest-count-label').textContent=`${allQ.filter(q=>isQuestDone(q)).length} completed · ${getTodayXP()} XP today`;
@@ -737,9 +743,9 @@ function uncompleteQuest(quest, itemEl){
     newItem.addEventListener('click',()=>completeQuest(quest,newItem,atCap));
   }
   showXPPop2(`-${xp} XP`);
-  // Update counts without full re-render
-  const allQ=state.categories.flatMap(c=>c.quests);
-  document.getElementById('quest-count-label').textContent=`${allQ.filter(q=>isQuestDone(q)).length} completed · ${getTodayXP()} XP today`;
+  const allQ2=state.categories.flatMap(c=>c.quests);
+  const cl=document.getElementById('quest-count-label');
+  if(cl)cl.textContent=`${allQ2.filter(q=>isQuestDone(q)).length} completed · ${getTodayXP()} XP today`;
   renderHome();
 }
 
@@ -928,7 +934,7 @@ let aiHistory = [];
 let aiTyping  = false;
 
 // ── Key management ──
-const BAKED_KEY = 'GROQ_API_KEY_HERE';
+const BAKED_KEY = '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';
 function getKey(){ return BAKED_KEY; }
 
 // key panel removed — key is baked in
