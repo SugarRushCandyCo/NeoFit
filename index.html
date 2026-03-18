@@ -321,19 +321,6 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
 <div class="screen" id="screen-ai" style="display:none;flex-direction:column;padding:0;">
 
 
-  <!-- API KEY PANEL -->
-  <div id="key-panel" style="padding:16px 15px 14px;background:var(--bg3);border-bottom:1px solid var(--border);flex-shrink:0;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div style="font-family:'Cinzel',serif;font-size:11px;font-weight:600;letter-spacing:3px;color:var(--gold2);">ENTER YOUR GROQ KEY</div>
-      <div class="day-badge" id="sage-status-badge" style="cursor:pointer;" onclick="toggleKeyPanel()">⚙ SETUP</div>
-    </div>
-    <div style="font-size:10px;color:var(--text-dim);line-height:1.8;margin-bottom:10px;">Powered by Llama 3.3 70B via Groq. Fast, free, and ready.</div>
-    <div style="display:flex;gap:8px;">
-      <input id="oai-key-input" type="password" placeholder="gsk_..." autocomplete="off"
-        style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);outline:none;">
-      <button onclick="saveKey()" style="background:var(--gold);border:none;border-radius:8px;color:var(--bg);font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:10px 14px;cursor:pointer;white-space:nowrap;">SAVE</button>
-    </div>
-  </div>
 
   <div class="ai-messages" id="ai-messages">
     <div class="ai-welcome">
@@ -916,40 +903,7 @@ let aiTyping  = false;
 const BAKED_KEY = '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';
 function getKey(){ return localStorage.getItem('ascend_oai_key') || BAKED_KEY; }
 
-function saveKey(){
-  const k = document.getElementById('oai-key-input').value.trim();
-  if(!k.startsWith('gsk_')){ showToast('Groq keys start with gsk_ — get one at console.groq.com'); return; }
-  localStorage.setItem('ascend_oai_key', k);
-  updateSageBadge();
-  document.getElementById('key-panel').style.display = 'none';
-  showToast('Key saved ✓');
-  appendSystemMsg("Key saved! I'm Sage — your AI life coach running on Llama 3.3 70B.\n\nTell me your goals and I'll build your quest board.");
-}
-
-function toggleKeyPanel(){
-  const p = document.getElementById('key-panel');
-  const hidden = p.style.display === 'none';
-  p.style.display = hidden ? 'block' : 'none';
-  if(hidden){
-    const k = getKey();
-    if(k) document.getElementById('oai-key-input').value = k;
-    document.getElementById('oai-key-input').focus();
-  }
-}
-
-function updateSageBadge(){
-  const b = document.getElementById('sage-status-badge');
-  if(!b) return;
-  if(getKey()){
-    b.textContent = '● READY';
-    b.style.color = '#2ecc71';
-    b.style.borderColor = 'rgba(46,204,113,0.35)';
-  } else {
-    b.textContent = '⚙ SETUP';
-    b.style.color = 'var(--gold)';
-    b.style.borderColor = 'rgba(201,146,42,0.35)';
-  }
-}
+// key panel removed — key is baked in
 
 // ── App context ──
 function getAppContext(){
@@ -991,10 +945,8 @@ async function sendAIMessage(){
   const input = document.getElementById('ai-input');
   const msg = input.value.trim();
   if(!msg || aiTyping) return;
-  if(!getKey()){
-    document.getElementById('key-panel').style.display = 'block';
-    document.getElementById('oai-key-input').focus();
-    showToast('Add your OpenAI key first ↑');
+  if(!getKey() || getKey() === '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'){
+    showToast('No API key — add yours to the HTML file');
     return;
   }
   input.value = ''; input.style.height = 'auto';
@@ -1182,10 +1134,8 @@ document.getElementById('ai-input').addEventListener('keydown', function(e){
 });
 
 // Show key panel if no key saved yet
-// Always ensure baked key is available
+// Baked key — load on start
 if(BAKED_KEY !== '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') localStorage.setItem('ascend_oai_key', BAKED_KEY);
-document.getElementById('key-panel').style.display = getKey() && getKey() !== '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' ? 'none' : 'block';
-updateSageBadge();
 
 // ════════════════════════════════════════
 //  LEVEL UP
