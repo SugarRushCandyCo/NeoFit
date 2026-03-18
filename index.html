@@ -901,7 +901,7 @@ let aiTyping  = false;
 
 // ── Key management ──
 const BAKED_KEY = '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';
-function getKey(){ return localStorage.getItem('ascend_oai_key') || BAKED_KEY; }
+function getKey(){ return BAKED_KEY; }
 
 // key panel removed — key is baked in
 
@@ -945,8 +945,8 @@ async function sendAIMessage(){
   const input = document.getElementById('ai-input');
   const msg = input.value.trim();
   if(!msg || aiTyping) return;
-  if(!getKey() || getKey() === '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'){
-    showToast('No API key — add yours to the HTML file');
+  if(!getKey() || getKey().trim() === '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'){
+    showToast('Replace GROQ_API_KEY_HERE in the HTML with your key');
     return;
   }
   input.value = ''; input.style.height = 'auto';
@@ -1134,8 +1134,7 @@ document.getElementById('ai-input').addEventListener('keydown', function(e){
 });
 
 // Show key panel if no key saved yet
-// Baked key — load on start
-if(BAKED_KEY !== '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') localStorage.setItem('ascend_oai_key', BAKED_KEY);
+// Key is read directly from BAKED_KEY constant above
 
 // ════════════════════════════════════════
 //  LEVEL UP
