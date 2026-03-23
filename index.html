@@ -962,10 +962,10 @@ function getKey(){return BAKED_KEY;}
 function getAppContext(){
   const lv=getCurrentLevel();const rank=getRankInfo(lv);
   const cats=state.categories.map(c=>
-    `[id:${c.id}] ${c.name}: `+
-    c.quests.map(q=>`${q.name}(${(q.frequency||'daily')[0].toUpperCase()},${q.xp}xp${isQuestDone(q)?',done':''})`).join(', ')
+    `Category: "${c.name}" (id:${c.id})\n`+
+    c.quests.map(q=>`  - "${q.name}" | ${q.frequency||'daily'} | ${q.xp}XP${isQuestDone(q)?' | done':''}`).join('\n')
   ).join('\n');
-  return `PLAYER: "${state.heroName||'Warrior'}" | Level ${lv} (${rank.title}) | XP ${state.totalXP} | Streak ${state.streak}d | Today ${getTodayXP()}/${state.dailyCap||420}XP\nQUEST BOARD:\n${cats}`;
+  return `PLAYER: "${state.heroName||'Warrior'}" | Level ${lv} (${rank.title}) | Total XP: ${state.totalXP} | Streak: ${state.streak}d | Today: ${getTodayXP()}/${state.dailyCap||420}XP\n\nCURRENT QUEST BOARD:\n${cats}`;
 }
 
 const SYSTEM=`You are Sage, a sharp and motivating AI life coach inside a gamified habit app called ASCEND. You speak in short punchy sentences. Real talk. No fluff.
@@ -1042,24 +1042,105 @@ async function runSage(){
   document.getElementById('ai-send-btn').disabled=false;
 }
 
+// Fuzzy name match helper
+function fuzzyFindCat(name){
+  if(!name) return null;
+  const n=name.toLowerCase().trim();
+  return state.categories.find(c=>c.name.toLowerCase()===n)
+    || state.categories.find(c=>c.name.toLowerCase().includes(n)||n.includes(c.name.toLowerCase()));
+}
+function fuzzyFindQuest(name){
+  if(!name) return null;
+  const n=name.toLowerCase().trim();
+  for(const cat of state.categories){
+    const q=cat.quests.find(q=>q.name.toLowerCase()===n)
+      ||cat.quests.find(q=>q.name.toLowerCase().includes(n)||n.includes(q.name.toLowerCase()));
+    if(q) return {cat,q};
+  }
+  return null;
+}
+
 function executeSageAction(act){
   const log=[];
   try{
+    // ── create_category ──
     if(act.action==='create_category'){
       const id='sage_'+Date.now();
       const color=act.color||CAT_COLORS[state.categories.length%CAT_COLORS.length];
-      const quests=(act.quests||[]).map((q,i)=>({id:`${id}_q${i}`,name:q.name||'Quest',desc:q.desc||'',xp:Math.max(5,Math.min(9999,q.xp||250)),frequency:q.frequency||'daily'}));
+      const quests=(act.quests||[]).map((q,i)=>({
+        id:`${id}_q${i}`,
+        name:q.name||'Quest',
+        desc:q.desc||'',
+        xp:Math.max(50,Math.min(9999,parseInt(q.xp)||250)),
+        frequency:q.frequency||'daily'
+      }));
       state.categories.push({id,name:act.name||'New Category',color,quests});
-      log.push(`Created "${act.name}" — ${quests.length} quest(s)`);
+      log.push(`✦ Created "${act.name}" (${quests.length} quests)`);
       quests.forEach(q=>log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
+
+    // ── add_quests ──
     } else if(act.action==='add_quests'){
-      const cat=state.categories.find(c=>c.id===act.category_id);
-      if(cat){const newQ=(act.quests||[]).map((q,i)=>({id:`sage_${Date.now()}_${i}`,name:q.name||'Quest',desc:q.desc||'',xp:Math.max(5,Math.min(9999,q.xp||250)),frequency:q.frequency||'daily'}));cat.quests.push(...newQ);log.push(`Added ${newQ.length} quest(s) to "${cat.name}"`);newQ.forEach(q=>log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));}
+      // Match by category_name (new) or category_id (old)
+      const cat = fuzzyFindCat(act.category_name) || state.categories.find(c=>c.id===act.category_id);
+      if(cat){
+        const newQ=(act.quests||[]).map((q,i)=>({
+          id:`sage_${Date.now()}_${i}`,
+          name:q.name||'Quest',
+          desc:q.desc||'',
+          xp:Math.max(50,Math.min(9999,parseInt(q.xp)||250)),
+          frequency:q.frequency||'daily'
+        }));
+        cat.quests.push(...newQ);
+        log.push(`✦ Added ${newQ.length} quest(s) to "${cat.name}"`);
+        newQ.forEach(q=>log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
+      } else {
+        // No matching category — create one
+        const id='sage_'+Date.now();
+        const color=CAT_COLORS[state.categories.length%CAT_COLORS.length];
+        const quests=(act.quests||[]).map((q,i)=>({id:`${id}_q${i}`,name:q.name||'Quest',desc:q.desc||'',xp:Math.max(50,Math.min(9999,parseInt(q.xp)||250)),frequency:q.frequency||'daily'}));
+        const catName=act.category_name||'New Category';
+        state.categories.push({id,name:catName,color,quests});
+        log.push(`✦ Created "${catName}" (${quests.length} quests)`);
+        quests.forEach(q=>log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
+      }
+
+    // ── remove_category ──
     } else if(act.action==='remove_category'){
-      const idx=state.categories.findIndex(c=>c.id===act.category_id);
-      if(idx>=0){log.push(`Removed "${state.categories[idx].name}"`);state.categories.splice(idx,1);}
+      const cat=fuzzyFindCat(act.category_name)||state.categories.find(c=>c.id===act.category_id);
+      if(cat){
+        const idx=state.categories.indexOf(cat);
+        state.categories.splice(idx,1);
+        log.push(`✦ Removed category "${cat.name}"`);
+      } else {
+        log.push(`⚠ Category not found: "${act.category_name}"`);
+      }
+
+    // ── delete_quest ──
+    } else if(act.action==='delete_quest'){
+      const match=fuzzyFindQuest(act.quest_name);
+      if(match){
+        const idx=match.cat.quests.indexOf(match.q);
+        match.cat.quests.splice(idx,1);
+        log.push(`✦ Deleted quest "${match.q.name}"`);
+      } else {
+        log.push(`⚠ Quest not found: "${act.quest_name}"`);
+      }
+
+    // ── rename_category ──
+    } else if(act.action==='rename_category'){
+      const cat=fuzzyFindCat(act.category_name);
+      if(cat){
+        const old=cat.name;
+        cat.name=act.new_name||cat.name;
+        log.push(`✦ Renamed "${old}" → "${cat.name}"`);
+      } else {
+        log.push(`⚠ Category not found: "${act.category_name}"`);
+      }
+
+    // ── update_name (hero) ──
     } else if(act.action==='update_name'){
-      state.heroName=act.name;log.push(`Hero name → "${act.name}"`);
+      state.heroName=act.name;
+      log.push(`✦ Hero name → "${act.name}"`);
     }
   }catch(e){log.push(`Error: ${e.message}`);}
   return log;
