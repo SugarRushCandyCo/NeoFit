@@ -1074,8 +1074,8 @@ function executeSageAction(act){
         xp:Math.max(50,Math.min(9999,parseInt(q.xp)||250)),
         frequency:q.frequency||'daily'
       }));
-      state.categories.push({id,name:act.name||'New Category',color,quests});
-      log.push(`✦ Created "${act.name}" (${quests.length} quests)`);
+      const catLabel=act.name&&act.name.trim()&&act.name!=='New Category'?act.name.trim():'Unnamed';state.categories.push({id,name:catLabel,color,quests});
+      log.push(`✦ Created "${catLabel}" (${quests.length} quests)`);
       quests.forEach(q=>log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
 
     // ── add_quests ──
@@ -1106,35 +1106,46 @@ function executeSageAction(act){
 
     // ── remove_category ──
     } else if(act.action==='remove_category'){
-      const cat=fuzzyFindCat(act.category_name)||state.categories.find(c=>c.id===act.category_id);
-      if(cat){
-        const idx=state.categories.indexOf(cat);
-        state.categories.splice(idx,1);
-        log.push(`✦ Removed category "${cat.name}"`);
+      // Support "delete all" — if no name given, wipe everything
+      if(!act.category_name && !act.category_id){
+        const names=state.categories.map(c=>c.name);
+        state.categories=[];
+        names.forEach(n=>log.push(`✦ Removed "${n}"`));
       } else {
-        log.push(`⚠ Category not found: "${act.category_name}"`);
+        const cat=fuzzyFindCat(act.category_name)||state.categories.find(c=>c.id===act.category_id);
+        if(cat){
+          const idx=state.categories.indexOf(cat);
+          state.categories.splice(idx,1);
+          log.push(`✦ Removed "${cat.name}"`);
+        } else {
+          log.push(`⚠ Not found: "${act.category_name||act.category_id}"`);
+        }
       }
 
     // ── delete_quest ──
     } else if(act.action==='delete_quest'){
-      const match=fuzzyFindQuest(act.quest_name);
-      if(match){
-        const idx=match.cat.quests.indexOf(match.q);
-        match.cat.quests.splice(idx,1);
-        log.push(`✦ Deleted quest "${match.q.name}"`);
+      if(!act.quest_name){
+        log.push('⚠ No quest name provided');
       } else {
-        log.push(`⚠ Quest not found: "${act.quest_name}"`);
+        const match=fuzzyFindQuest(act.quest_name);
+        if(match){
+          const idx=match.cat.quests.indexOf(match.q);
+          match.cat.quests.splice(idx,1);
+          log.push(`✦ Deleted "${match.q.name}"`);
+        } else {
+          log.push(`⚠ Quest not found: "${act.quest_name}"`);
+        }
       }
 
     // ── rename_category ──
     } else if(act.action==='rename_category'){
       const cat=fuzzyFindCat(act.category_name);
       if(cat){
-        const old=cat.name;
+        const oldName=cat.name;
         cat.name=act.new_name||cat.name;
-        log.push(`✦ Renamed "${old}" → "${cat.name}"`);
+        log.push(`✦ Renamed "${oldName}" → "${cat.name}"`);
       } else {
-        log.push(`⚠ Category not found: "${act.category_name}"`);
+        log.push(`⚠ Not found: "${act.category_name}"`);
       }
 
     // ── update_name (hero) ──
