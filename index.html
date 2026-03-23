@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ASCEND — Life RPG</title>
+<script defer src="https://cloud.umami.is/script.js" data-website-id="36245bb8-2bae-48eb-8cb8-f8a449ffe9d1"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -248,9 +249,10 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;m
 .ai-send-btn:active{opacity:0.7;}
 .ai-send-btn:disabled{opacity:0.3;cursor:default;}
 .ai-send-btn svg{width:18px;height:18px;}
-.ai-suggestions{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;}
+.ai-suggestions{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:4px;cursor:grab;user-select:none;-webkit-user-select:none;}
+.ai-suggestions.dragging{cursor:grabbing;}
 .ai-suggestions::-webkit-scrollbar{display:none;}
-.ai-suggest-chip{background:var(--bg3);border:1px solid var(--border);border-radius:16px;color:var(--text-mid);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:5px 11px;cursor:pointer;white-space:nowrap;transition:all 0.15s;flex-shrink:0;}
+.ai-suggest-chip{background:var(--bg3);border:1px solid var(--border);border-radius:16px;color:var(--text-mid);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;padding:5px 11px;cursor:pointer;white-space:nowrap;transition:border-color 0.15s,color 0.15s;flex-shrink:0;}
 .ai-suggest-chip:active{border-color:var(--gold);color:var(--gold);}
 .ai-welcome{text-align:center;padding:30px 20px;color:var(--text-dim);}
 .ai-welcome-icon{font-size:38px;margin-bottom:14px;}
@@ -1124,6 +1126,59 @@ function showXPPopCenter(text,color='var(--gold2)'){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function timeNow(){const d=new Date();return `${p2(d.getHours())}:${p2(d.getMinutes())}`;}
+
+// ════════════════════════════════════════
+//  DRAG-TO-SCROLL (suggestions row)
+// ════════════════════════════════════════
+(function(){
+  const el = document.getElementById('ai-suggestions');
+  if(!el) return;
+  // Track whether this gesture was a drag (>8px) or a tap
+  let startX=0, startScrollLeft=0, dragging=false;
+  const DRAG_THRESHOLD = 8;
+
+  // ── Mouse ──
+  el.addEventListener('mousedown', e=>{
+    dragging=false;
+    startX = e.pageX;
+    startScrollLeft = el.scrollLeft;
+    el.classList.add('dragging');
+    const onMove = mv=>{
+      const dx = mv.pageX - startX;
+      if(Math.abs(dx) > DRAG_THRESHOLD) dragging=true;
+      el.scrollLeft = startScrollLeft - dx;
+    };
+    const onUp = ()=>{
+      el.classList.remove('dragging');
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+
+  // ── Touch ──
+  el.addEventListener('touchstart', e=>{
+    dragging=false;
+    startX = e.touches[0].clientX;
+    startScrollLeft = el.scrollLeft;
+  }, {passive:true});
+
+  el.addEventListener('touchmove', e=>{
+    const dx = e.touches[0].clientX - startX;
+    if(Math.abs(dx) > DRAG_THRESHOLD) dragging=true;
+    el.scrollLeft = startScrollLeft - dx;
+  }, {passive:true});
+
+  // ── Block click only if we genuinely dragged ──
+  el.addEventListener('click', e=>{
+    if(dragging){
+      e.stopPropagation();
+      e.preventDefault();
+      dragging=false;
+    }
+  }, true);
+})();
 
 // ════════════════════════════════════════
 //  INIT
