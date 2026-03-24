@@ -27,7 +27,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{width:100%;height:100%;height:-webkit-fill-available;background:#0a0a0c;overflow:hidden;}
-body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;min-height:100vh;display:flex;justify-content:center;}
+body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;display:flex;justify-content:center;}
 
 #app{
   width:100%;max-width:480px;height:100%;overflow:hidden;
@@ -222,14 +222,7 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace,'
 #screen-ai.active{display:flex !important;flex-direction:column;}
 .ai-messages{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px;min-height:0;-webkit-overflow-scrolling:touch;}
 .ai-messages::-webkit-scrollbar{width:0;}
-/* Force all symbol/emoji characters to use a safe font, never Arabic */
-.freq-badge,.nav-btn,.quest-xp,.undo-hint,.cat-xp-sum,.ai-action-item,
-.cz-cat-del,.cz-q-del,.cz-toggle-btn,.cz-add-quest-btn,.levelup-dismiss,
-.confirm-cancel,.confirm-ok,.cz-save-btn,.cz-add-btn,.ai-suggest-chip{
-  font-family:'Space Mono','Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',monospace,sans-serif;
-}
-/* Cinzel elements also get emoji fallback */
-.topbar-title,.hero-rank,.hero-name,.level-num,.quest-xp,.lv-badge,.levelup-text,.levelup-num,.section-title,.cz-section-title{font-family:'Cinzel',serif,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji';}
+
 .ai-msg{display:flex;flex-direction:column;max-width:88%;}
 .ai-msg.user{align-self:flex-end;align-items:flex-end;}
 .ai-msg.assistant{align-self:flex-start;align-items:flex-start;}
@@ -240,7 +233,7 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace,'
 .ai-action-card{background:var(--bg3);border:1px solid var(--gold);border-radius:10px;padding:12px 14px;margin-top:4px;max-width:88%;align-self:flex-start;}
 .ai-action-title{font-family:'Cinzel',serif;font-size:10px;font-weight:600;letter-spacing:2px;color:var(--gold);margin-bottom:6px;text-transform:uppercase;}
 .ai-action-item{font-size:11px;color:var(--text-mid);padding:2px 0;display:flex;align-items:center;gap:6px;}
-.ai-action-item::before{content:'+';color:var(--gold);font-size:8px;}
+.ai-action-item::before{content:'✦';color:var(--gold);font-size:8px;}
 .ai-typing{display:flex;gap:5px;align-items:center;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px 12px 12px 3px;width:fit-content;}
 .ai-typing span{width:7px;height:7px;border-radius:50%;background:var(--text-dim);animation:typingPulse 1.4s infinite ease-in-out;}
 .ai-typing span:nth-child(2){animation-delay:0.2s;}
@@ -299,14 +292,7 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace,'
 .empty-state{text-align:center;padding:36px 18px;color:var(--text-dim);font-size:11px;letter-spacing:2px;line-height:2;}
 .empty-state .em{font-size:30px;display:block;margin-bottom:10px;}
 ::-webkit-scrollbar{width:0;}
-/* Force all symbol/emoji characters to use a safe font, never Arabic */
-.freq-badge,.nav-btn,.quest-xp,.undo-hint,.cat-xp-sum,.ai-action-item,
-.cz-cat-del,.cz-q-del,.cz-toggle-btn,.cz-add-quest-btn,.levelup-dismiss,
-.confirm-cancel,.confirm-ok,.cz-save-btn,.cz-add-btn,.ai-suggest-chip{
-  font-family:'Space Mono','Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',monospace,sans-serif;
-}
-/* Cinzel elements also get emoji fallback */
-.topbar-title,.hero-rank,.hero-name,.level-num,.quest-xp,.lv-badge,.levelup-text,.levelup-num,.section-title,.cz-section-title{font-family:'Cinzel',serif,'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji';}
+
 </style>
 </head>
 <body>
@@ -328,10 +314,10 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace,'
     <div class="days-to-level" id="days-to-next">— complete quests to begin —</div>
   </div>
   <div class="stat-grid">
-    <div class="stat-card"><div class="stat-icon">&#9889;</div><div class="stat-label">Today's XP</div><div class="stat-value gold" id="today-xp">0</div></div>
-    <div class="stat-card"><div class="stat-icon">&#128293;</div><div class="stat-label">Streak</div><div class="stat-value green" id="streak-val">0 days</div></div>
-    <div class="stat-card"><div class="stat-icon">&#9989;</div><div class="stat-label">Quests Today</div><div class="stat-value" id="quests-done-val">0 / 0</div></div>
-    <div class="stat-card"><div class="stat-icon">&#127942;</div><div class="stat-label">Total XP</div><div class="stat-value" id="total-xp-val">0</div></div>
+    <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-label">Today's XP</div><div class="stat-value gold" id="today-xp">0</div></div>
+    <div class="stat-card"><div class="stat-icon">🔥</div><div class="stat-label">Streak</div><div class="stat-value green" id="streak-val">0 days</div></div>
+    <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-label">Quests Today</div><div class="stat-value" id="quests-done-val">0 / 0</div></div>
+    <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-label">Total XP</div><div class="stat-value" id="total-xp-val">0</div></div>
   </div>
   <div class="daily-cap-bar">
     <div class="cap-header"><div class="cap-label">Daily XP Cap</div><div class="cap-num" id="cap-num">0 / 420</div></div>
@@ -374,7 +360,7 @@ body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace,'
   <div class="topbar"><div class="topbar-title">SAGE</div></div>
   <div class="ai-messages" id="ai-messages">
     <div class="ai-welcome">
-      <div class="ai-welcome-icon">&#127807;</div>
+      <div class="ai-welcome-icon">🌿</div>
       <div class="ai-welcome-title">SAGE</div>
       <div class="ai-welcome-body">Your AI life coach, powered by Llama 3.3 70B.
 Free forever. No credit card. Just you and your goals.</div>
@@ -454,7 +440,7 @@ Free forever. No credit card. Just you and your goals.</div>
     <div class="levelup-emblem"><div class="levelup-num" id="modal-level">2</div></div>
     <div class="levelup-text">LEVEL UP!</div>
     <div class="levelup-rank" id="modal-rank">APPRENTICE</div>
-    <button class="levelup-dismiss" onclick="dismissLevelUp()">CLAIM *</button>
+    <button class="levelup-dismiss" onclick="dismissLevelUp()">CLAIM ✦</button>
   </div>
 </div>
 
@@ -653,7 +639,7 @@ function renderQuests(){
       const done=isQuestDone(q);
       const item=document.createElement('div');
       const freqClass=`freq-${q.frequency||'daily'}`;
-      const freqLabel={daily:'D',weekly:'W',longterm:'LT'}[q.frequency||'daily'];
+      const freqLabel={daily:'D',weekly:'W',longterm:'∞'}[q.frequency||'daily'];
       const qName=q.name||'Quest';
       const qDesc=q.desc||'';
       const qXp=Math.max(1,parseInt(q.xp)||100);
@@ -732,7 +718,7 @@ function completeQuest(quest){
     if(!state.xpHistory[today]) state.xpHistory[today]=0;
     state.xpHistory[today]+=xp;
     awardXP(xp,today);
-    showXPPopCenter(`+${xp} XP (LT)`);
+    showXPPopCenter(`+${xp} XP ∞`);
   }
 
   updateStreak(today);
@@ -820,7 +806,7 @@ function renderWeekGrid(){
 }
 function renderLevelHistory(){
   const c=document.getElementById('level-history');
-  if(!state.levelHistory.length){c.innerHTML='<div class="empty-state"><span class="em">&#9876;</span>Complete quests consistently<br>to earn your first level up</div>';return;}
+  if(!state.levelHistory.length){c.innerHTML='<div class="empty-state"><span class="em">⚔️</span>Complete quests consistently<br>to earn your first level up</div>';return;}
   c.innerHTML='';
   [...state.levelHistory].reverse().forEach((lh,idx)=>{
     const rank=getRankInfo(lh.level);
@@ -870,8 +856,8 @@ function renderCzCategories(){
       <div class="cz-cat-header">
         <div class="cz-cat-color-dot" id="czdot-${ci}" style="background:${cat.color}"></div>
         <input class="cz-cat-name-input" value="${escHtml(cat.name)}" maxlength="20" id="czname-${ci}" placeholder="Category name">
-        <button class="cz-cat-del" onclick="confirmDeleteCat(${ci})">x</button>
-        <button class="cz-toggle-btn${isOpen?' open':''}" id="cztoggle-${ci}" onclick="toggleCzCat(${ci})">v</button>
+        <button class="cz-cat-del" onclick="confirmDeleteCat(${ci})">×</button>
+        <button class="cz-toggle-btn${isOpen?' open':''}" id="cztoggle-${ci}" onclick="toggleCzCat(${ci})">▼</button>
       </div>
       <div class="cz-cat-body" id="czbody-${ci}" style="display:${isOpen?'block':'none'}">
         <div id="czquests-${ci}"></div>
@@ -913,7 +899,7 @@ function renderCzQuestsForCat(ci){
         <option value="weekly"${q.frequency==='weekly'?' selected':''}>W</option>
         <option value="longterm"${q.frequency==='longterm'?' selected':''}>INF</option>
       </select>
-      <button class="cz-q-del" onclick="confirmDeleteQuest(${ci},${qi})">x</button>`;
+      <button class="cz-q-del" onclick="confirmDeleteQuest(${ci},${qi})">×</button>`;
     row.querySelector('.cz-q-name').addEventListener('change',e=>{state.categories[ci].quests[qi].name=e.target.value;saveState();showToast('Saved ✓');});
     row.querySelector('.cz-q-desc').addEventListener('change',e=>{state.categories[ci].quests[qi].desc=e.target.value;saveState();showToast('Saved ✓');});
     row.querySelector('.cz-q-xp').addEventListener('change',e=>{const v=parseInt(e.target.value);if(v>=5&&v<=999){state.categories[ci].quests[qi].xp=v;saveState();showToast('XP updated ✓');}});
@@ -1055,7 +1041,7 @@ async function runSage(){
     if(err.message.includes('401'))hint='\nInvalid key.';
     else if(err.message.includes('429'))hint='\nRate limited — wait a moment.';
     else if(err.message.includes('fetch')||err.message.includes('Network')||err.message.includes('Failed'))hint='\n\nNetwork error. Try hosting this file online.';
-    appendAssistantMsg('! '+err.message+hint,null);
+    appendAssistantMsg('⚠ '+err.message+hint,null);
   }
   aiTyping=false;
   document.getElementById('ai-send-btn').disabled=false;
@@ -1106,7 +1092,7 @@ function executeSageAction(act){
       // Title-case it
       catLabel=catLabel.replace(/\w/g,c=>c.toUpperCase());
       state.categories.push({id,name:catLabel,color,quests});
-      log.push(`+ Created "${catLabel}" (${quests.length} quests)`);
+      log.push(`✦ Created "${catLabel}" (${quests.length} quests)`);
       quests.forEach(q=>log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
 
     // ── add_quests ──
@@ -1122,7 +1108,7 @@ function executeSageAction(act){
           frequency:q.frequency||'daily'
         }));
         cat.quests.push(...newQ);
-        log.push(`+ Added ${newQ.length} quest(s) to "${cat.name}"`);
+        log.push(`✦ Added ${newQ.length} quest(s) to "${cat.name}"`);
         newQ.forEach(q=>log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
       } else {
         // No matching category — create one
@@ -1136,7 +1122,7 @@ function executeSageAction(act){
         }
         catName=catName.replace(/\b\w/g,c=>c.toUpperCase());
         state.categories.push({id,name:catName,color,quests});
-        log.push(`+ Created "${catName}" (${quests.length} quests)`);
+        log.push(`✦ Created "${catName}" (${quests.length} quests)`);
         quests.forEach(q=>log.push(`${freqIcon(q.frequency)} ${q.name} +${q.xp}XP`));
       }
 
@@ -1146,30 +1132,30 @@ function executeSageAction(act){
       if(!act.category_name && !act.category_id){
         const names=state.categories.map(c=>c.name);
         state.categories=[];
-        names.forEach(n=>log.push(`- Removed "${n}"`));
+        names.forEach(n=>log.push(`✦ Removed "${n}"`));
       } else {
         const cat=fuzzyFindCat(act.category_name)||state.categories.find(c=>c.id===act.category_id);
         if(cat){
           const idx=state.categories.indexOf(cat);
           state.categories.splice(idx,1);
-          log.push(`- Removed "${cat.name}"`);
+          log.push(`✦ Removed "${cat.name}"`);
         } else {
-          log.push(`! Not found: "${act.category_name||act.category_id}"`);
+          log.push(`⚠ Not found: "${act.category_name||act.category_id}"`);
         }
       }
 
     // ── delete_quest ──
     } else if(act.action==='delete_quest'){
       if(!act.quest_name){
-        log.push('! No quest name provided');
+        log.push('⚠ No quest name provided');
       } else {
         const match=fuzzyFindQuest(act.quest_name);
         if(match){
           const idx=match.cat.quests.indexOf(match.q);
           match.cat.quests.splice(idx,1);
-          log.push(`- Deleted "${match.q.name}"`);
+          log.push(`✦ Deleted "${match.q.name}"`);
         } else {
-          log.push(`! Quest not found: "${act.quest_name}"`);
+          log.push(`⚠ Quest not found: "${act.quest_name}"`);
         }
       }
 
@@ -1179,20 +1165,20 @@ function executeSageAction(act){
       if(cat){
         const oldName=cat.name;
         cat.name=act.new_name||cat.name;
-        log.push(`~ Renamed "${oldName}" → "${cat.name}"`);
+        log.push(`✦ Renamed "${oldName}" → "${cat.name}"`);
       } else {
-        log.push(`! Not found: "${act.category_name}"`);
+        log.push(`⚠ Not found: "${act.category_name}"`);
       }
 
     // ── update_name (hero) ──
     } else if(act.action==='update_name'){
       state.heroName=act.name;
-      log.push(`~ Hero name → "${act.name}"`);
+      log.push(`✦ Hero name → "${act.name}"`);
     }
   }catch(e){log.push(`Error: ${e.message}`);}
   return log;
 }
-function freqIcon(f){return {daily:'D',weekly:'W',longterm:'LT'}[f]||'D';}
+function freqIcon(f){return {daily:'D',weekly:'W',longterm:'∞'}[f]||'D';}
 
 function appendUserMsg(text){
   const msgs=document.getElementById('ai-messages');
@@ -1206,7 +1192,7 @@ function appendAssistantMsg(text,actions){
   const div=document.createElement('div');div.className='ai-msg assistant';
   div.innerHTML=`<div class="ai-bubble">${escHtml(text)}</div><div class="ai-msg-time">${timeNow()}</div>`;
   msgs.appendChild(div);
-  if(actions&&actions.length){const card=document.createElement('div');card.className='ai-action-card';card.innerHTML=`<div class="ai-action-title">&#9889; Actions Taken</div>${actions.map(a=>`<div class="ai-action-item">${escHtml(a)}</div>`).join('')}`;msgs.appendChild(card);}
+  if(actions&&actions.length){const card=document.createElement('div');card.className='ai-action-card';card.innerHTML=`<div class="ai-action-title">⚡ Actions Taken</div>${actions.map(a=>`<div class="ai-action-item">${escHtml(a)}</div>`).join('')}`;msgs.appendChild(card);}
   msgs.scrollTop=msgs.scrollHeight;
 }
 function showTyping(){removePrevTyping();const msgs=document.getElementById('ai-messages');const div=document.createElement('div');div.className='ai-msg assistant';div.id='ai-typing-indicator';div.innerHTML=`<div class="ai-typing"><span></span><span></span><span></span></div>`;msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;}
